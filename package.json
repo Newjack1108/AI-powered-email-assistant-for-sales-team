@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start -p ${PORT:-3000} -H ${HOSTNAME:-0.0.0.0}",
     "lint": "next lint",
-    "postinstall": "echo 'Build complete'"
+    "postinstall": "echo 'Build complete'",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
     "@types/multer": "^1.4.11",
