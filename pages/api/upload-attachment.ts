@@ -54,23 +54,26 @@ export default function handler(
 
   const uploadSingle = upload.single('attachment');
 
-  uploadSingle(req, res, (err) => {
+  // Type assertion to work with Next.js API routes
+  uploadSingle(req as any, res as any, (err: any) => {
     if (err) {
       console.error('Upload error:', err);
       return res.status(500).json({ error: 'File upload failed', message: err.message });
     }
 
-    if (!req.file) {
+    if (!(req as any).file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    const file = (req as any).file;
 
     return res.status(200).json({
       success: true,
       file: {
-        filename: req.file.originalname,
-        path: `/uploads/${req.file.filename}`,
-        size: req.file.size,
-        mimetype: req.file.mimetype,
+        filename: file.originalname,
+        path: `/uploads/${file.filename}`,
+        size: file.size,
+        mimetype: file.mimetype,
       },
     });
   });
