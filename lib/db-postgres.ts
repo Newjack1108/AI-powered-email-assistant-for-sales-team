@@ -78,7 +78,7 @@ export async function initDb() {
   `);
 }
 
-export async function saveEmail(email: Omit<EmailRecord, 'created_at' | 'sent_at'>) {
+export async function saveEmail(email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) {
   await pool.query(
     `INSERT INTO emails (
       id, recipient_email, recipient_name, subject, body, lead_source, 
