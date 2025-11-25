@@ -33,12 +33,14 @@ export interface Template {
   updated_at: string;
 }
 
-// Use PostgreSQL if DATABASE_URL is set (Railway), otherwise use SQLite (local)
+// Dynamically import the appropriate database module
+let dbModule: any;
+
 if (process.env.DATABASE_URL) {
-  // Re-export everything from PostgreSQL module
-  export * from './db-postgres';
+  // Use PostgreSQL (Railway production)
+  dbModule = require('./db-postgres');
 } else {
-  // Use SQLite for local development
+  // Use SQLite (local development)
   const sqlite3 = require('sqlite3');
   const { promisify } = require('util');
   const path = require('path');
@@ -60,7 +62,7 @@ if (process.env.DATABASE_URL) {
   const dbGet = promisify(db.get.bind(db));
 
   // Initialize database tables
-  export async function initDb() {
+  const initDb = async () => {
     await dbRun(`
       CREATE TABLE IF NOT EXISTS emails (
         id TEXT PRIMARY KEY,
@@ -117,9 +119,9 @@ if (process.env.DATABASE_URL) {
     } catch (error: any) {
       // Ignore errors
     }
-  }
+  };
 
-  export async function saveEmail(email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) {
+  const saveEmail = async (email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) => {
     await dbRun(
       `INSERT INTO emails (
         id, recipient_email, recipient_name, subject, body, lead_source, 
@@ -146,16 +148,16 @@ if (process.env.DATABASE_URL) {
         email.sent_via || null,
       ]
     );
-  }
+  };
 
-  export async function updateEmailStatus(id: string, status: string, sentAt?: string, sentVia?: string) {
+  const updateEmailStatus = async (id: string, status: string, sentAt?: string, sentVia?: string) => {
     await dbRun(
       `UPDATE emails SET status = ?, sent_at = ?, sent_via = ? WHERE id = ?`,
       [status, sentAt || null, sentVia || null, id]
     );
-  }
+  };
 
-  export async function getEmails(limit: number = 50): Promise<EmailRecord[]> {
+  const getEmails = async (limit: number = 50): Promise<EmailRecord[]> => {
     try {
       const result = await dbAll(
         `SELECT * FROM emails ORDER BY created_at DESC LIMIT ?`,
@@ -166,13 +168,13 @@ if (process.env.DATABASE_URL) {
       console.error('Error fetching emails:', error);
       return [];
     }
-  }
+  };
 
-  export async function getEmail(id: string): Promise<EmailRecord | undefined> {
+  const getEmail = async (id: string): Promise<EmailRecord | undefined> => {
     return (await dbGet(`SELECT * FROM emails WHERE id = ?`, [id])) as EmailRecord | undefined;
-  }
+  };
 
-  export async function saveTemplate(template: Omit<Template, 'created_at' | 'updated_at'>) {
+  const saveTemplate = async (template: Omit<Template, 'created_at' | 'updated_at'>) => {
     await dbRun(
       `INSERT INTO templates (id, name, subject, body, attachments, updated_at) 
        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -184,9 +186,9 @@ if (process.env.DATABASE_URL) {
          updated_at = CURRENT_TIMESTAMP`,
       [template.id, template.name, template.subject || null, template.body, template.attachments || null]
     );
-  }
+  };
 
-  export async function getTemplates(): Promise<Template[]> {
+  const getTemplates = async (): Promise<Template[]> => {
     try {
       const result = await dbAll(`SELECT * FROM templates ORDER BY updated_at DESC`);
       return Array.isArray(result) ? (result as Template[]) : [];
@@ -194,16 +196,40 @@ if (process.env.DATABASE_URL) {
       console.error('Error fetching templates:', error);
       return [];
     }
-  }
+  };
 
-  export async function getTemplate(id: string): Promise<Template | undefined> {
+  const getTemplate = async (id: string): Promise<Template | undefined> => {
     return (await dbGet(`SELECT * FROM templates WHERE id = ?`, [id])) as Template | undefined;
-  }
+  };
 
-  export async function deleteTemplate(id: string) {
+  const deleteTemplate = async (id: string) => {
     await dbRun(`DELETE FROM templates WHERE id = ?`, [id]);
-  }
+  };
 
   // Initialize database on import
   initDb().catch(console.error);
+
+  // Export SQLite functions
+  dbModule = {
+    initDb,
+    saveEmail,
+    updateEmailStatus,
+    getEmails,
+    getEmail,
+    saveTemplate,
+    getTemplates,
+    getTemplate,
+    deleteTemplate,
+  };
 }
+
+// Export all functions from the appropriate module
+export const initDb = dbModule.initDb;
+export const saveEmail = dbModule.saveEmail;
+export const updateEmailStatus = dbModule.updateEmailStatus;
+export const getEmails = dbModule.getEmails;
+export const getEmail = dbModule.getEmail;
+export const saveTemplate = dbModule.saveTemplate;
+export const getTemplates = dbModule.getTemplates;
+export const getTemplate = dbModule.getTemplate;
+export const deleteTemplate = dbModule.deleteTemplate;
