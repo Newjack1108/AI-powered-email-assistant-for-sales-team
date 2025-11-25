@@ -59,9 +59,40 @@ export interface User {
 // Dynamically import the appropriate database module
 let dbModule: any;
 
+// Initialize dbModule based on environment
 if (process.env.DATABASE_URL) {
   // Use PostgreSQL (Railway production)
-  dbModule = require('./db-postgres');
+  // Import as ES module - this will be handled by Next.js
+  try {
+    // Use dynamic import at runtime, but we need to handle this differently
+    // Since we can't use top-level await, we'll use a getter pattern
+    const postgresModule = require('./db-postgres');
+    // Ensure all exports are available
+    dbModule = {
+      initDb: postgresModule.initDb,
+      saveEmail: postgresModule.saveEmail,
+      updateEmailStatus: postgresModule.updateEmailStatus,
+      getEmails: postgresModule.getEmails,
+      getEmail: postgresModule.getEmail,
+      saveTemplate: postgresModule.saveTemplate,
+      getTemplates: postgresModule.getTemplates,
+      getTemplate: postgresModule.getTemplate,
+      deleteTemplate: postgresModule.deleteTemplate,
+      getUserByEmail: postgresModule.getUserByEmail,
+      getUserById: postgresModule.getUserById,
+      createUser: postgresModule.createUser,
+      updateUser: postgresModule.updateUser,
+      updateUserPassword: postgresModule.updateUserPassword,
+      saveSpecialOffer: postgresModule.saveSpecialOffer,
+      getSpecialOffers: postgresModule.getSpecialOffers,
+      getSpecialOffer: postgresModule.getSpecialOffer,
+      deleteSpecialOffer: postgresModule.deleteSpecialOffer,
+    };
+    console.log('Using PostgreSQL database');
+  } catch (error) {
+    console.error('Error loading PostgreSQL module:', error);
+    throw error;
+  }
 } else {
   // Use SQLite (local development)
   const sqlite3 = require('sqlite3');
