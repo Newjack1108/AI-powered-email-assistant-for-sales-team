@@ -10,6 +10,15 @@ export default async function handler(
   }
 
   try {
+    // Check for OpenAI API key
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not configured');
+      return res.status(500).json({ 
+        error: 'OpenAI API key is not configured',
+        message: 'Please set OPENAI_API_KEY in your environment variables'
+      });
+    }
+
     const formData: EmailFormData = req.body;
 
     if (!formData.recipientEmail) {
@@ -21,9 +30,20 @@ export default async function handler(
     return res.status(200).json({ subject, body });
   } catch (error: any) {
     console.error('Error generating email:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to generate email';
+    if (error.message?.includes('API key')) {
+      errorMessage = 'OpenAI API key is invalid or missing';
+    } else if (error.message?.includes('rate limit')) {
+      errorMessage = 'OpenAI API rate limit exceeded';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     return res.status(500).json({ 
-      error: 'Failed to generate email',
-      message: error.message 
+      error: errorMessage,
+      message: error.message || 'Unknown error occurred'
     });
   }
 }

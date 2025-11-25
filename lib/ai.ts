@@ -28,7 +28,7 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
   const prompt = buildPrompt(formData);
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4-turbo-preview',
+    model: process.env.OPENAI_MODEL || 'gpt-4o', // Use gpt-4o as default (more recent and available)
     messages: [
       {
         role: 'system',
