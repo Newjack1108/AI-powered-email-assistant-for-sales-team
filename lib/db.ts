@@ -226,12 +226,66 @@ if (process.env.DATABASE_URL) {
 }
 
 // Export all functions from the appropriate module
-export const initDb = dbModule.initDb;
-export const saveEmail = dbModule.saveEmail;
-export const updateEmailStatus = dbModule.updateEmailStatus;
-export const getEmails = dbModule.getEmails;
-export const getEmail = dbModule.getEmail;
-export const saveTemplate = dbModule.saveTemplate;
-export const getTemplates = dbModule.getTemplates;
-export const getTemplate = dbModule.getTemplate;
-export const deleteTemplate = dbModule.deleteTemplate;
+// Wrap in functions to ensure dbModule is initialized
+export const initDb = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.initDb(...args);
+};
+
+export const saveEmail = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.saveEmail(...args);
+};
+
+export const updateEmailStatus = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.updateEmailStatus(...args);
+};
+
+export const getEmails = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getEmails(...args);
+};
+
+export const getEmail = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getEmail(...args);
+};
+
+export const saveTemplate = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.saveTemplate(...args);
+};
+
+export const getTemplates = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getTemplates(...args);
+};
+
+export const getTemplate = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getTemplate(...args);
+};
+
+export const deleteTemplate = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.deleteTemplate(...args);
+};
