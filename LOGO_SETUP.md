@@ -1,4 +1,4 @@
-# Logo Setup Instructions
+# Logo and Favicon Setup Instructions
 
 ## Where to Place Your Logo
 
@@ -8,8 +8,59 @@ Place your logo image file in the **`public`** folder at the root of your projec
 ```
 sales-email-assistant/
   └── public/
-      └── logo.png  (or logo.jpg, logo.svg, etc.)
+      ├── logo.png  (or logo.jpg, logo.svg, etc.)
+      └── favicon.ico  (or other favicon files)
 ```
+
+## Favicon Setup
+
+### Where to Place Your Favicon
+
+Place your favicon files in the **`public`** folder:
+
+```
+public/
+  ├── favicon.ico          (16x16 or 32x32, required)
+  ├── favicon-16x16.png    (optional, for better quality)
+  ├── favicon-32x32.png    (optional, for better quality)
+  ├── apple-touch-icon.png (180x180, for iOS devices)
+  └── site.webmanifest     (optional, for PWA support)
+```
+
+### Favicon File Specifications
+
+**Required:**
+- `favicon.ico` - 16x16 or 32x32 pixels, ICO format
+
+**Optional (but recommended):**
+- `favicon-16x16.png` - 16x16 pixels, PNG format
+- `favicon-32x32.png` - 32x32 pixels, PNG format
+- `apple-touch-icon.png` - 180x180 pixels, PNG format (for iOS home screen)
+- `site.webmanifest` - JSON file for PWA support
+
+### Quick Setup
+
+**Minimum setup (just favicon.ico):**
+1. Create or export a 32x32 pixel icon
+2. Save it as `favicon.ico` in the `public` folder
+3. Done! It will appear in browser tabs
+
+**Recommended setup (all sizes):**
+1. Create icons in these sizes:
+   - 16x16 pixels → `favicon-16x16.png`
+   - 32x32 pixels → `favicon-32x32.png` and `favicon.ico`
+   - 180x180 pixels → `apple-touch-icon.png`
+2. Place all files in the `public` folder
+3. The app will automatically use them
+
+### Online Favicon Generators
+
+You can use these tools to generate all favicon sizes from a single image:
+- https://realfavicongenerator.net/
+- https://favicon.io/
+- https://www.favicon-generator.org/
+
+Just upload your logo/image and download the generated files, then place them in the `public` folder.
 
 ## Supported File Formats
 
