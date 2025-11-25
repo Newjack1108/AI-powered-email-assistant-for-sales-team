@@ -113,7 +113,13 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
 
   try {
     // Get or create assistant
-    const assistant = await getOrCreateAssistant();
+    const assistantId = await getOrCreateAssistant();
+    
+    if (!assistantId) {
+      throw new Error('Failed to get or create assistant');
+    }
+
+    console.log(`🚀 Generating email using assistant ID: ${assistantId}`);
 
     // Create a thread
     const thread = await openai.beta.threads.create();
@@ -127,10 +133,12 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
       content: prompt,
     });
 
-    // Run the assistant
+    // Run the assistant - using the assistant ID
     const run = await openai.beta.threads.runs.create(thread.id, {
-      assistant_id: assistant,
+      assistant_id: assistantId,
     });
+    
+    console.log(`📧 Assistant run started with ID: ${run.id}`);
 
     // Wait for the run to complete
     let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
