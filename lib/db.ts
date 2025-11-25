@@ -350,6 +350,37 @@ if (process.env.DATABASE_URL) {
     );
   };
 
+  // Special offers functions
+  const saveSpecialOffer = async (offer: Omit<SpecialOffer, 'created_at' | 'updated_at'>) => {
+    await dbRun(
+      `INSERT INTO special_offers (id, name, description, updated_at) 
+       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(id) DO UPDATE SET
+         name = excluded.name,
+         description = excluded.description,
+         updated_at = CURRENT_TIMESTAMP`,
+      [offer.id, offer.name, offer.description]
+    );
+  };
+
+  const getSpecialOffers = async (): Promise<SpecialOffer[]> => {
+    try {
+      const result = await dbAll(`SELECT * FROM special_offers ORDER BY updated_at DESC`);
+      return Array.isArray(result) ? (result as SpecialOffer[]) : [];
+    } catch (error) {
+      console.error('Error fetching special offers:', error);
+      return [];
+    }
+  };
+
+  const getSpecialOffer = async (id: string): Promise<SpecialOffer | undefined> => {
+    return (await dbGet(`SELECT * FROM special_offers WHERE id = ?`, [id])) as SpecialOffer | undefined;
+  };
+
+  const deleteSpecialOffer = async (id: string) => {
+    await dbRun(`DELETE FROM special_offers WHERE id = ?`, [id]);
+  };
+
   // Initialize database on import (but don't block)
   initDb().catch((error) => {
     console.error('Error initializing SQLite database:', error);
@@ -371,6 +402,10 @@ if (process.env.DATABASE_URL) {
     createUser,
     updateUser,
     updateUserPassword,
+    saveSpecialOffer,
+    getSpecialOffers,
+    getSpecialOffer,
+    deleteSpecialOffer,
   };
 }
 
