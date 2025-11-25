@@ -40,16 +40,18 @@ RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
 RUN mkdir -p /app/public/uploads && chown nextjs:nodejs /app/public/uploads
 
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 
 USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=${PORT:-3000}
+ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
 
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
 
 
