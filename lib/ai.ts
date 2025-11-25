@@ -5,7 +5,10 @@ const openai = new OpenAI({
 });
 
 // Assistant ID - will be created on first use if not set
-let assistantId: string | null = process.env.OPENAI_ASSISTANT_ID || null;
+// We'll check the environment variable fresh each time to ensure we use the latest value
+function getAssistantIdFromEnv(): string | null {
+  return process.env.OPENAI_ASSISTANT_ID || null;
+}
 
 export interface EmailFormData {
   recipientName?: string;
@@ -25,18 +28,26 @@ export interface EmailFormData {
 
 // Create or get the assistant
 async function getOrCreateAssistant(): Promise<string> {
+  // Always check the environment variable fresh
+  let assistantId = getAssistantIdFromEnv();
+  
   if (assistantId) {
     try {
-      // Verify the assistant exists
-      await openai.beta.assistants.retrieve(assistantId);
+      // Verify the assistant exists and retrieve its details
+      const assistant = await openai.beta.assistants.retrieve(assistantId);
+      console.log(`✅ Using existing assistant ID: ${assistantId}`);
+      console.log(`   Assistant name: ${assistant.name}`);
+      console.log(`   Assistant model: ${assistant.model}`);
       return assistantId;
-    } catch (error) {
-      console.log('Assistant not found, creating new one...');
+    } catch (error: any) {
+      console.warn(`⚠️  Assistant ID ${assistantId} not found or invalid:`, error.message);
+      console.log('Creating new assistant...');
       assistantId = null;
     }
   }
 
   // Create a new assistant
+  console.log('Creating new assistant...');
   const assistant = await openai.beta.assistants.create({
     name: 'Sales Email Assistant',
     instructions: buildAssistantInstructions(),
@@ -45,8 +56,9 @@ async function getOrCreateAssistant(): Promise<string> {
   });
 
   assistantId = assistant.id;
-  console.log(`Created new assistant with ID: ${assistantId}`);
-  console.log(`Add this to your Railway environment variables: OPENAI_ASSISTANT_ID=${assistantId}`);
+  console.log(`✅ Created new assistant with ID: ${assistantId}`);
+  console.log(`📋 IMPORTANT: Add this to your Railway environment variables:`);
+  console.log(`   OPENAI_ASSISTANT_ID=${assistantId}`);
   
   return assistantId;
 }
