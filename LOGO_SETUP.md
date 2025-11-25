@@ -14,18 +14,25 @@ sales-email-assistant/
 
 ## Favicon Setup
 
+### Default Favicon
+
+A default SVG favicon (`favicon.svg`) has been created for you. It shows a purple "E" icon. You can replace it with your own favicon files.
+
 ### Where to Place Your Favicon
 
 Place your favicon files in the **`public`** folder:
 
 ```
 public/
-  ├── favicon.ico          (16x16 or 32x32, required)
+  ├── favicon.svg          (default SVG favicon - already created)
+  ├── favicon.ico          (16x16 or 32x32, optional - replace default)
   ├── favicon-16x16.png    (optional, for better quality)
   ├── favicon-32x32.png    (optional, for better quality)
   ├── apple-touch-icon.png (180x180, for iOS devices)
-  └── site.webmanifest     (optional, for PWA support)
+  └── site.webmanifest     (already created - no need to change)
 ```
+
+**Note:** The app will use `favicon.svg` by default. If you add other favicon files, they will be used as fallbacks for browsers that don't support SVG favicons.
 
 ### Favicon File Specifications
 
