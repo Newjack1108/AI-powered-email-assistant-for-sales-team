@@ -58,15 +58,13 @@ export interface User {
 
 // Dynamically import the appropriate database module
 let dbModule: any;
+let dbModulePromise: Promise<any> | null = null;
 
 // Initialize dbModule based on environment
 if (process.env.DATABASE_URL) {
   // Use PostgreSQL (Railway production)
-  // Import as ES module - this will be handled by Next.js
-  try {
-    // Use dynamic import at runtime, but we need to handle this differently
-    // Since we can't use top-level await, we'll use a getter pattern
-    const postgresModule = require('./db-postgres');
+  // Use dynamic import to properly load ES6 module
+  dbModulePromise = import('./db-postgres').then((postgresModule) => {
     // Ensure all exports are available
     dbModule = {
       initDb: postgresModule.initDb,
@@ -89,10 +87,11 @@ if (process.env.DATABASE_URL) {
       deleteSpecialOffer: postgresModule.deleteSpecialOffer,
     };
     console.log('Using PostgreSQL database');
-  } catch (error) {
+    return dbModule;
+  }).catch((error) => {
     console.error('Error loading PostgreSQL module:', error);
     throw error;
-  }
+  });
 } else {
   // Use SQLite (local development)
   const sqlite3 = require('sqlite3');
@@ -440,130 +439,109 @@ if (process.env.DATABASE_URL) {
   };
 }
 
+// Helper function to ensure dbModule is loaded
+async function ensureDbModule() {
+  // If already loaded (SQLite or PostgreSQL after load), return immediately
+  if (dbModule) {
+    return dbModule;
+  }
+  // If PostgreSQL is loading, wait for it
+  if (dbModulePromise) {
+    await dbModulePromise;
+    return dbModule;
+  }
+  // For SQLite, dbModule should be set synchronously, so this shouldn't happen
+  throw new Error('Database module not initialized');
+}
+
 // Export all functions from the appropriate module
 // Wrap in functions to ensure dbModule is initialized
-export const initDb = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.initDb(...args);
+export const initDb = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.initDb(...args);
 };
 
-export const saveEmail = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.saveEmail(...args);
+export const saveEmail = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.saveEmail(...args);
 };
 
-export const updateEmailStatus = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.updateEmailStatus(...args);
+export const updateEmailStatus = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.updateEmailStatus(...args);
 };
 
-export const getEmails = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getEmails(...args);
+export const getEmails = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getEmails(...args);
 };
 
-export const getEmail = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getEmail(...args);
+export const getEmail = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getEmail(...args);
 };
 
-export const saveTemplate = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.saveTemplate(...args);
+export const saveTemplate = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.saveTemplate(...args);
 };
 
-export const getTemplates = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getTemplates(...args);
+export const getTemplates = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getTemplates(...args);
 };
 
-export const getTemplate = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getTemplate(...args);
+export const getTemplate = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getTemplate(...args);
 };
 
-export const deleteTemplate = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.deleteTemplate(...args);
+export const deleteTemplate = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.deleteTemplate(...args);
 };
 
-export const getUserByEmail = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getUserByEmail(...args);
+export const getUserByEmail = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getUserByEmail(...args);
 };
 
-export const getUserById = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getUserById(...args);
+export const getUserById = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getUserById(...args);
 };
 
-export const createUser = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.createUser(...args);
+export const createUser = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.createUser(...args);
 };
 
-export const updateUser = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.updateUser(...args);
+export const updateUser = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.updateUser(...args);
 };
 
-export const updateUserPassword = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.updateUserPassword(...args);
+export const updateUserPassword = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.updateUserPassword(...args);
 };
 
-export const saveSpecialOffer = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.saveSpecialOffer(...args);
+export const saveSpecialOffer = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.saveSpecialOffer(...args);
 };
 
-export const getSpecialOffers = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getSpecialOffers(...args);
+export const getSpecialOffers = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getSpecialOffers(...args);
 };
 
-export const getSpecialOffer = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.getSpecialOffer(...args);
+export const getSpecialOffer = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getSpecialOffer(...args);
 };
 
-export const deleteSpecialOffer = (...args: any[]) => {
-  if (!dbModule) {
-    throw new Error('Database module not initialized');
-  }
-  return dbModule.deleteSpecialOffer(...args);
+export const deleteSpecialOffer = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.deleteSpecialOffer(...args);
 };
