@@ -120,7 +120,7 @@ if (process.env.DATABASE_URL) {
     }
   };
 
-  const saveEmail = async (email: Omit<EmailRecord, 'created_at' | 'sent_at'>) => {
+  const saveEmail = async (email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) => {
     await dbRun(
       `INSERT INTO emails (
         id, recipient_email, recipient_name, subject, body, lead_source, 
