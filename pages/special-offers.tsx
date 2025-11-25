@@ -26,10 +26,15 @@ export default function SpecialOffers() {
   const loadOffers = async () => {
     try {
       const res = await fetch('/api/special-offers');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
+      // Ensure data is always an array
       setOffers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading special offers:', error);
+      setOffers([]);
     }
   };
 

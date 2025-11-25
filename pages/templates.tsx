@@ -39,9 +39,11 @@ export default function Templates() {
     try {
       const res = await fetch('/api/templates');
       const data = await res.json();
-      setTemplates(data);
+      // Ensure data is always an array
+      setTemplates(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading templates:', error);
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
