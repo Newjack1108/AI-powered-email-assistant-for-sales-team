@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getSpecialOffers, getSpecialOffer, saveSpecialOffer, deleteSpecialOffer, initDb } from '@/lib/db';
+import { initDb } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(
@@ -19,18 +19,23 @@ export default async function handler(
       const { id } = req.query;
       
       if (id) {
-        const offer = await getSpecialOffer(id as string);
+        const { getSpecialOffer: getOffer } = await import('@/lib/db');
+        const offer = await getOffer(id as string);
         if (!offer) {
           return res.status(404).json({ error: 'Special offer not found' });
         }
         return res.status(200).json(offer);
       }
 
-      const offers = await getSpecialOffers();
+      const { getSpecialOffers: getOffers } = await import('@/lib/db');
+      const offers = await getOffers();
       return res.status(200).json(offers || []);
     } catch (error: any) {
       console.error('Error fetching special offers:', error);
-      return res.status(500).json({ error: 'Failed to fetch special offers' });
+      return res.status(500).json({ 
+        error: 'Failed to fetch special offers',
+        message: error.message || 'Unknown error'
+      });
     }
   }
 
@@ -43,7 +48,8 @@ export default async function handler(
       }
 
       const offerId = id || uuidv4();
-      await saveSpecialOffer({
+      const { saveSpecialOffer: saveOffer } = await import('@/lib/db');
+      await saveOffer({
         id: offerId,
         name,
         description,
@@ -52,7 +58,10 @@ export default async function handler(
       return res.status(200).json({ success: true, id: offerId });
     } catch (error: any) {
       console.error('Error saving special offer:', error);
-      return res.status(500).json({ error: 'Failed to save special offer' });
+      return res.status(500).json({ 
+        error: 'Failed to save special offer',
+        message: error.message || 'Unknown error'
+      });
     }
   }
 
@@ -64,11 +73,15 @@ export default async function handler(
         return res.status(400).json({ error: 'Special offer ID is required' });
       }
 
-      await deleteSpecialOffer(id as string);
+      const { deleteSpecialOffer: deleteOffer } = await import('@/lib/db');
+      await deleteOffer(id as string);
       return res.status(200).json({ success: true });
     } catch (error: any) {
       console.error('Error deleting special offer:', error);
-      return res.status(500).json({ error: 'Failed to delete special offer' });
+      return res.status(500).json({ 
+        error: 'Failed to delete special offer',
+        message: error.message || 'Unknown error'
+      });
     }
   }
 
