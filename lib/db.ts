@@ -142,6 +142,35 @@ if (process.env.DATABASE_URL) {
     } catch (error: any) {
       // Ignore errors
     }
+
+    // Create users table
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        name TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
+        signature_name TEXT,
+        signature_title TEXT,
+        signature_phone TEXT,
+        signature_email TEXT,
+        signature_company TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create special_offers table
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS special_offers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
   };
 
   const saveEmail = async (email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) => {
