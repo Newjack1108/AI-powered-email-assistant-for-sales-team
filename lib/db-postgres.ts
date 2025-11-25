@@ -53,6 +53,14 @@ export interface User {
   updated_at: string;
 }
 
+export interface SpecialOffer {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Initialize database tables
 export async function initDb() {
   // Create emails table
@@ -105,6 +113,17 @@ export async function initDb() {
       signature_phone TEXT,
       signature_email TEXT,
       signature_company TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create special_offers table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS special_offers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )

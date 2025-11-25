@@ -207,6 +207,8 @@ function buildPrompt(formData: EmailFormData): string {
   }
 
   if (formData.specialOffers) {
+    // If specialOffers is an ID, we need to get the description
+    // For now, we'll pass it as-is and handle it in the prompt building
     prompt += `Special offers available: ${formData.specialOffers}\n`;
   }
 

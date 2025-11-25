@@ -34,6 +34,7 @@ export default function Home() {
   });
 
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [specialOffers, setSpecialOffers] = useState<{ id: string; name: string; description: string }[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [generatedEmail, setGeneratedEmail] = useState<{ subject: string; body: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,19 @@ export default function Home() {
 
   useEffect(() => {
     loadTemplates();
+    loadSpecialOffers();
   }, []);
+
+  const loadSpecialOffers = async () => {
+    try {
+      const res = await fetch('/api/special-offers');
+      const data = await res.json();
+      setSpecialOffers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading special offers:', error);
+      setSpecialOffers([]);
+    }
+  };
 
   useEffect(() => {
     // When template is selected, load its attachments
@@ -322,6 +335,7 @@ export default function Home() {
             <Link href="/">Compose</Link>
             <Link href="/history">History</Link>
             <Link href="/templates">Templates</Link>
+            <Link href="/special-offers">Special Offers</Link>
           </nav>
         </div>
       </div>

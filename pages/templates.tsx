@@ -178,6 +178,7 @@ export default function Templates() {
             <Link href="/">Compose</Link>
             <Link href="/history">History</Link>
             <Link href="/templates">Templates</Link>
+            <Link href="/special-offers">Special Offers</Link>
           </nav>
         </div>
       </div>

@@ -33,6 +33,14 @@ export interface Template {
   updated_at: string;
 }
 
+export interface SpecialOffer {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -435,4 +443,32 @@ export const updateUserPassword = (...args: any[]) => {
     throw new Error('Database module not initialized');
   }
   return dbModule.updateUserPassword(...args);
+};
+
+export const saveSpecialOffer = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.saveSpecialOffer(...args);
+};
+
+export const getSpecialOffers = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getSpecialOffers(...args);
+};
+
+export const getSpecialOffer = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getSpecialOffer(...args);
+};
+
+export const deleteSpecialOffer = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.deleteSpecialOffer(...args);
 };
