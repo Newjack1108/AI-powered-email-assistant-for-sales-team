@@ -36,8 +36,7 @@ export interface Template {
 // Use PostgreSQL if DATABASE_URL is set (Railway), otherwise use SQLite (local)
 if (process.env.DATABASE_URL) {
   // Re-export everything from PostgreSQL module
-  const pgModule = require('./db-postgres');
-  module.exports = pgModule;
+  export * from './db-postgres';
 } else {
   // Use SQLite for local development
   const sqlite3 = require('sqlite3');
@@ -61,7 +60,7 @@ if (process.env.DATABASE_URL) {
   const dbGet = promisify(db.get.bind(db));
 
   // Initialize database tables
-  const initDb = async () => {
+  export async function initDb() {
     await dbRun(`
       CREATE TABLE IF NOT EXISTS emails (
         id TEXT PRIMARY KEY,
@@ -118,9 +117,9 @@ if (process.env.DATABASE_URL) {
     } catch (error: any) {
       // Ignore errors
     }
-  };
+  }
 
-  const saveEmail = async (email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) => {
+  export async function saveEmail(email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) {
     await dbRun(
       `INSERT INTO emails (
         id, recipient_email, recipient_name, subject, body, lead_source, 
@@ -147,16 +146,16 @@ if (process.env.DATABASE_URL) {
         email.sent_via || null,
       ]
     );
-  };
+  }
 
-  const updateEmailStatus = async (id: string, status: string, sentAt?: string, sentVia?: string) => {
+  export async function updateEmailStatus(id: string, status: string, sentAt?: string, sentVia?: string) {
     await dbRun(
       `UPDATE emails SET status = ?, sent_at = ?, sent_via = ? WHERE id = ?`,
       [status, sentAt || null, sentVia || null, id]
     );
-  };
+  }
 
-  const getEmails = async (limit: number = 50): Promise<EmailRecord[]> => {
+  export async function getEmails(limit: number = 50): Promise<EmailRecord[]> {
     try {
       const result = await dbAll(
         `SELECT * FROM emails ORDER BY created_at DESC LIMIT ?`,
@@ -167,13 +166,13 @@ if (process.env.DATABASE_URL) {
       console.error('Error fetching emails:', error);
       return [];
     }
-  };
+  }
 
-  const getEmail = async (id: string): Promise<EmailRecord | undefined> => {
+  export async function getEmail(id: string): Promise<EmailRecord | undefined> {
     return (await dbGet(`SELECT * FROM emails WHERE id = ?`, [id])) as EmailRecord | undefined;
-  };
+  }
 
-  const saveTemplate = async (template: Omit<Template, 'created_at' | 'updated_at'>) => {
+  export async function saveTemplate(template: Omit<Template, 'created_at' | 'updated_at'>) {
     await dbRun(
       `INSERT INTO templates (id, name, subject, body, attachments, updated_at) 
        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -185,9 +184,9 @@ if (process.env.DATABASE_URL) {
          updated_at = CURRENT_TIMESTAMP`,
       [template.id, template.name, template.subject || null, template.body, template.attachments || null]
     );
-  };
+  }
 
-  const getTemplates = async (): Promise<Template[]> => {
+  export async function getTemplates(): Promise<Template[]> {
     try {
       const result = await dbAll(`SELECT * FROM templates ORDER BY updated_at DESC`);
       return Array.isArray(result) ? (result as Template[]) : [];
@@ -195,29 +194,16 @@ if (process.env.DATABASE_URL) {
       console.error('Error fetching templates:', error);
       return [];
     }
-  };
+  }
 
-  const getTemplate = async (id: string): Promise<Template | undefined> => {
+  export async function getTemplate(id: string): Promise<Template | undefined> {
     return (await dbGet(`SELECT * FROM templates WHERE id = ?`, [id])) as Template | undefined;
-  };
+  }
 
-  const deleteTemplate = async (id: string) => {
+  export async function deleteTemplate(id: string) {
     await dbRun(`DELETE FROM templates WHERE id = ?`, [id]);
-  };
+  }
 
   // Initialize database on import
   initDb().catch(console.error);
-
-  // Export SQLite functions
-  module.exports = {
-    initDb,
-    saveEmail,
-    updateEmailStatus,
-    getEmails,
-    getEmail,
-    saveTemplate,
-    getTemplates,
-    getTemplate,
-    deleteTemplate,
-  };
 }
