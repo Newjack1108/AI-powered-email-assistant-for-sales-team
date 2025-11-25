@@ -16,6 +16,8 @@ export interface EmailFormData {
   leadTimes?: string;
   additionalContext?: string;
   template?: string;
+  useTemplateDirectly?: boolean;
+  postcode?: string;
 }
 
 export async function generateEmail(formData: EmailFormData): Promise<{ subject: string; body: string }> {
