@@ -44,6 +44,26 @@ a {
   align-items: center;
 }
 
+.header-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  height: 50px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* Makes logo white - remove this if your logo is already colored */
+}
+
+.header-logo-container h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
 .header h1 {
   font-size: 28px;
   font-weight: 600;

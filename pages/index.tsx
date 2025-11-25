@@ -301,7 +301,18 @@ export default function Home() {
 
       <div className="header">
         <div className="header-content">
-          <h1>Sales Email Assistant</h1>
+          <div className="header-logo-container">
+            <img 
+              src="/logo.png" 
+              alt="Company Logo" 
+              className="header-logo"
+              onError={(e) => {
+                // Hide logo if image doesn't exist
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <h1>Sales Email Assistant</h1>
+          </div>
           <nav className="nav-links">
             <Link href="/">Compose</Link>
             <Link href="/history">History</Link>
