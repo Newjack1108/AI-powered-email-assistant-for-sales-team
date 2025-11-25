@@ -43,18 +43,43 @@ export default async function handler(
       }
 
       const templateId = id || uuidv4();
-      await saveTemplate({
+      
+      // Serialize attachments if it's an array
+      let attachmentsData = null;
+      if (attachments) {
+        if (Array.isArray(attachments)) {
+          attachmentsData = JSON.stringify(attachments);
+        } else if (typeof attachments === 'string') {
+          // Already a string, might be JSON
+          try {
+            JSON.parse(attachments); // Validate it's valid JSON
+            attachmentsData = attachments;
+          } catch {
+            attachmentsData = JSON.stringify([attachments]);
+          }
+        } else {
+          attachmentsData = JSON.stringify(attachments);
+        }
+      }
+
+      // Use dynamic import to ensure dbModule is initialized
+      const { saveTemplate: saveTemplateFn } = await import('@/lib/db');
+      await saveTemplateFn({
         id: templateId,
         name,
-        subject,
+        subject: subject || null,
         body,
-        attachments: attachments || null,
+        attachments: attachmentsData,
       });
 
       return res.status(200).json({ success: true, id: templateId });
     } catch (error: any) {
       console.error('Error saving template:', error);
-      return res.status(500).json({ error: 'Failed to save template' });
+      return res.status(500).json({ 
+        error: 'Failed to save template',
+        message: error.message || 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   }
 
