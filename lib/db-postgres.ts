@@ -347,6 +347,53 @@ export async function updateUserPassword(id: string, passwordHash: string) {
   );
 }
 
+// Special offers functions
+export async function saveSpecialOffer(offer: Omit<SpecialOffer, 'created_at' | 'updated_at'>) {
+  await pool.query(
+    `INSERT INTO special_offers (id, name, description, updated_at) 
+     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+     ON CONFLICT(id) DO UPDATE SET
+       name = EXCLUDED.name,
+       description = EXCLUDED.description,
+       updated_at = CURRENT_TIMESTAMP`,
+    [offer.id, offer.name, offer.description]
+  );
+}
+
+export async function getSpecialOffers(): Promise<SpecialOffer[]> {
+  try {
+    const result = await pool.query(`SELECT * FROM special_offers ORDER BY updated_at DESC`);
+    return result.rows.map(row => ({
+      ...row,
+      created_at: row.created_at?.toISOString() || new Date().toISOString(),
+      updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+    })) as SpecialOffer[];
+  } catch (error) {
+    console.error('Error fetching special offers:', error);
+    return [];
+  }
+}
+
+export async function getSpecialOffer(id: string): Promise<SpecialOffer | undefined> {
+  try {
+    const result = await pool.query(`SELECT * FROM special_offers WHERE id = $1`, [id]);
+    if (result.rows.length === 0) return undefined;
+    const row = result.rows[0];
+    return {
+      ...row,
+      created_at: row.created_at?.toISOString() || new Date().toISOString(),
+      updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+    } as SpecialOffer;
+  } catch (error) {
+    console.error('Error fetching special offer:', error);
+    return undefined;
+  }
+}
+
+export async function deleteSpecialOffer(id: string) {
+  await pool.query(`DELETE FROM special_offers WHERE id = $1`, [id]);
+}
+
 // Initialize database on import (only if DATABASE_URL is set)
 // Don't block - let it initialize in the background
 if (process.env.DATABASE_URL) {
