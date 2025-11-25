@@ -33,6 +33,21 @@ export interface Template {
   updated_at: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  password_hash: string;
+  name: string;
+  role: 'admin' | 'user';
+  signature_name?: string;
+  signature_title?: string;
+  signature_phone?: string;
+  signature_email?: string;
+  signature_company?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Dynamically import the appropriate database module
 let dbModule: any;
 
@@ -219,10 +234,107 @@ if (process.env.DATABASE_URL) {
     deleteTemplate,
   };
 
+  // User management functions
+  const getUserByEmail = async (email: string): Promise<User | undefined> => {
+    return (await dbGet(`SELECT * FROM users WHERE email = ?`, [email])) as User | undefined;
+  };
+
+  const getUserById = async (id: string): Promise<User | undefined> => {
+    return (await dbGet(`SELECT * FROM users WHERE id = ?`, [id])) as User | undefined;
+  };
+
+  const createUser = async (user: Omit<User, 'created_at' | 'updated_at'>) => {
+    await dbRun(
+      `INSERT INTO users (id, email, password_hash, name, role, signature_name, signature_title, signature_phone, signature_email, signature_company, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [
+        user.id,
+        user.email,
+        user.password_hash,
+        user.name,
+        user.role || 'user',
+        user.signature_name || null,
+        user.signature_title || null,
+        user.signature_phone || null,
+        user.signature_email || null,
+        user.signature_company || null,
+      ]
+    );
+  };
+
+  const updateUser = async (id: string, updates: Partial<Omit<User, 'id' | 'email' | 'password_hash' | 'created_at'>>) => {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (updates.name !== undefined) {
+      fields.push('name = ?');
+      values.push(updates.name);
+    }
+    if (updates.role !== undefined) {
+      fields.push('role = ?');
+      values.push(updates.role);
+    }
+    if (updates.signature_name !== undefined) {
+      fields.push('signature_name = ?');
+      values.push(updates.signature_name);
+    }
+    if (updates.signature_title !== undefined) {
+      fields.push('signature_title = ?');
+      values.push(updates.signature_title);
+    }
+    if (updates.signature_phone !== undefined) {
+      fields.push('signature_phone = ?');
+      values.push(updates.signature_phone);
+    }
+    if (updates.signature_email !== undefined) {
+      fields.push('signature_email = ?');
+      values.push(updates.signature_email);
+    }
+    if (updates.signature_company !== undefined) {
+      fields.push('signature_company = ?');
+      values.push(updates.signature_company);
+    }
+
+    if (fields.length === 0) return;
+
+    fields.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(id);
+
+    await dbRun(
+      `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+      values
+    );
+  };
+
+  const updateUserPassword = async (id: string, passwordHash: string) => {
+    await dbRun(
+      `UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [passwordHash, id]
+    );
+  };
+
   // Initialize database on import (but don't block)
   initDb().catch((error) => {
     console.error('Error initializing SQLite database:', error);
   });
+
+  // Export SQLite functions
+  dbModule = {
+    initDb,
+    saveEmail,
+    updateEmailStatus,
+    getEmails,
+    getEmail,
+    saveTemplate,
+    getTemplates,
+    getTemplate,
+    deleteTemplate,
+    getUserByEmail,
+    getUserById,
+    createUser,
+    updateUser,
+    updateUserPassword,
+  };
 }
 
 // Export all functions from the appropriate module
@@ -288,4 +400,39 @@ export const deleteTemplate = (...args: any[]) => {
     throw new Error('Database module not initialized');
   }
   return dbModule.deleteTemplate(...args);
+};
+
+export const getUserByEmail = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getUserByEmail(...args);
+};
+
+export const getUserById = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.getUserById(...args);
+};
+
+export const createUser = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.createUser(...args);
+};
+
+export const updateUser = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.updateUser(...args);
+};
+
+export const updateUserPassword = (...args: any[]) => {
+  if (!dbModule) {
+    throw new Error('Database module not initialized');
+  }
+  return dbModule.updateUserPassword(...args);
 };

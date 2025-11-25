@@ -38,6 +38,21 @@ export interface Template {
   updated_at: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  password_hash: string;
+  name: string;
+  role: 'admin' | 'user';
+  signature_name?: string;
+  signature_title?: string;
+  signature_phone?: string;
+  signature_email?: string;
+  signature_company?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Initialize database tables
 export async function initDb() {
   // Create emails table
@@ -72,6 +87,24 @@ export async function initDb() {
       subject TEXT,
       body TEXT NOT NULL,
       attachments TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create users table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT DEFAULT 'user',
+      signature_name TEXT,
+      signature_title TEXT,
+      signature_phone TEXT,
+      signature_email TEXT,
+      signature_company TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
@@ -199,6 +232,100 @@ export async function getTemplate(id: string): Promise<Template | undefined> {
 
 export async function deleteTemplate(id: string) {
   await pool.query(`DELETE FROM templates WHERE id = $1`, [id]);
+}
+
+// User management functions
+export async function getUserByEmail(email: string): Promise<User | undefined> {
+  const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+  if (result.rows.length === 0) return undefined;
+  const row = result.rows[0];
+  return {
+    ...row,
+    created_at: row.created_at?.toISOString() || new Date().toISOString(),
+    updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+  } as User;
+}
+
+export async function getUserById(id: string): Promise<User | undefined> {
+  const result = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
+  if (result.rows.length === 0) return undefined;
+  const row = result.rows[0];
+  return {
+    ...row,
+    created_at: row.created_at?.toISOString() || new Date().toISOString(),
+    updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+  } as User;
+}
+
+export async function createUser(user: Omit<User, 'created_at' | 'updated_at'>) {
+  await pool.query(
+    `INSERT INTO users (id, email, password_hash, name, role, signature_name, signature_title, signature_phone, signature_email, signature_company, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
+    [
+      user.id,
+      user.email,
+      user.password_hash,
+      user.name,
+      user.role || 'user',
+      user.signature_name || null,
+      user.signature_title || null,
+      user.signature_phone || null,
+      user.signature_email || null,
+      user.signature_company || null,
+    ]
+  );
+}
+
+export async function updateUser(id: string, updates: Partial<Omit<User, 'id' | 'email' | 'password_hash' | 'created_at'>>) {
+  const fields: string[] = [];
+  const values: any[] = [];
+  let paramCount = 1;
+
+  if (updates.name !== undefined) {
+    fields.push(`name = $${paramCount++}`);
+    values.push(updates.name);
+  }
+  if (updates.role !== undefined) {
+    fields.push(`role = $${paramCount++}`);
+    values.push(updates.role);
+  }
+  if (updates.signature_name !== undefined) {
+    fields.push(`signature_name = $${paramCount++}`);
+    values.push(updates.signature_name);
+  }
+  if (updates.signature_title !== undefined) {
+    fields.push(`signature_title = $${paramCount++}`);
+    values.push(updates.signature_title);
+  }
+  if (updates.signature_phone !== undefined) {
+    fields.push(`signature_phone = $${paramCount++}`);
+    values.push(updates.signature_phone);
+  }
+  if (updates.signature_email !== undefined) {
+    fields.push(`signature_email = $${paramCount++}`);
+    values.push(updates.signature_email);
+  }
+  if (updates.signature_company !== undefined) {
+    fields.push(`signature_company = $${paramCount++}`);
+    values.push(updates.signature_company);
+  }
+
+  if (fields.length === 0) return;
+
+  fields.push('updated_at = CURRENT_TIMESTAMP');
+  values.push(id);
+
+  await pool.query(
+    `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount}`,
+    values
+  );
+}
+
+export async function updateUserPassword(id: string, passwordHash: string) {
+  await pool.query(
+    `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+    [passwordHash, id]
+  );
 }
 
 // Initialize database on import (only if DATABASE_URL is set)
