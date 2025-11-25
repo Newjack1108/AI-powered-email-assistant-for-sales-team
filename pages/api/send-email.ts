@@ -12,8 +12,13 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Ensure database is initialized
-  await initDb();
+  // Ensure database is initialized (with error handling)
+  try {
+    await initDb();
+  } catch (error: any) {
+    console.error('Database initialization error:', error);
+    // Continue anyway - initDb should be idempotent
+  }
 
   try {
     const {

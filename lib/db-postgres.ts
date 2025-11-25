@@ -202,7 +202,10 @@ export async function deleteTemplate(id: string) {
 }
 
 // Initialize database on import (only if DATABASE_URL is set)
+// Don't block - let it initialize in the background
 if (process.env.DATABASE_URL) {
-  initDb().catch(console.error);
+  initDb().catch((error) => {
+    console.error('Error initializing PostgreSQL database:', error);
+  });
 }
 

@@ -206,9 +206,6 @@ if (process.env.DATABASE_URL) {
     await dbRun(`DELETE FROM templates WHERE id = ?`, [id]);
   };
 
-  // Initialize database on import
-  initDb().catch(console.error);
-
   // Export SQLite functions
   dbModule = {
     initDb,
@@ -221,6 +218,11 @@ if (process.env.DATABASE_URL) {
     getTemplate,
     deleteTemplate,
   };
+
+  // Initialize database on import (but don't block)
+  initDb().catch((error) => {
+    console.error('Error initializing SQLite database:', error);
+  });
 }
 
 // Export all functions from the appropriate module

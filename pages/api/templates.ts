@@ -6,8 +6,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Ensure database is initialized
-  await initDb();
+  // Ensure database is initialized (with error handling)
+  try {
+    await initDb();
+  } catch (error: any) {
+    console.error('Database initialization error:', error);
+    // Continue anyway - initDb should be idempotent
+  }
 
   if (req.method === 'GET') {
     try {
