@@ -26,6 +26,7 @@ export interface EmailFormData {
   useTemplateDirectly?: boolean;
   postcode?: string;
   mood?: string;
+  receivedEmail?: string; // Pasted received email to reply to
   userSignature?: {
     name?: string;
     title?: string;
@@ -287,6 +288,51 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
 function buildPrompt(formData: EmailFormData): string {
   const companyName = 'Cheshire Sheds and garden buildings ltd (CSGB Group) T/A Cheshire Stables, Cheshire Sheds and Beaver Log Cabins';
   
+  // Check if this is a reply to a received email
+  if (formData.receivedEmail && formData.receivedEmail.trim()) {
+    let prompt = `Please analyze the following received email and write an appropriate professional response:\n\n`;
+    prompt += `=== RECEIVED EMAIL ===\n${formData.receivedEmail}\n=== END OF RECEIVED EMAIL ===\n\n`;
+    prompt += `Instructions:\n`;
+    prompt += `1. Extract the sender's name and email address from the received email\n`;
+    prompt += `2. Understand the context and what the sender is asking about\n`;
+    prompt += `3. Write a professional, helpful response that addresses their questions or concerns\n`;
+    prompt += `4. Maintain a ${formData.mood || 'professional'} tone\n`;
+    prompt += `5. If the sender mentioned a product type, reference it appropriately\n`;
+    prompt += `6. If they asked questions, answer them clearly\n`;
+    prompt += `7. If they expressed interest, provide next steps\n`;
+    prompt += `8. Be concise but comprehensive\n\n`;
+    
+    // Add additional context if provided
+    if (formData.additionalContext) {
+      prompt += `Additional context to consider: ${formData.additionalContext}\n\n`;
+    }
+    
+    // Add product type info if available
+    if (formData.productType) {
+      let productTypeInfo = formData.productType;
+      if (formData.productTypeTradingName) {
+        productTypeInfo += ` (Trading Name: ${formData.productTypeTradingName})`;
+      }
+      prompt += `Product Type: ${productTypeInfo}\n`;
+      if (formData.productTypeTradingName) {
+        prompt += `IMPORTANT: When referring to this product type, use the trading name "${formData.productTypeTradingName}" instead of "${formData.productType}".\n`;
+      }
+    }
+    
+    // Add special offers if available
+    if (formData.specialOffers) {
+      prompt += `Special offers available: ${formData.specialOffers}\n`;
+    }
+    
+    // Add lead times if available
+    if (formData.leadTimes) {
+      prompt += `Lead times information: ${formData.leadTimes}\n`;
+    }
+    
+    return prompt;
+  }
+  
+  // Original prompt for new emails
   let prompt = `Please write a professional sales email with the following details:\n\n`;
 
   if (formData.recipientName) {

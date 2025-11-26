@@ -35,6 +35,7 @@ export default function Home() {
     postcode: '',
     templateId: '',
     mood: 'professional',
+    receivedEmail: '', // For pasting received emails to reply to
   });
 
   const [templates, setTemplates] = useState<Template[]>([]);
