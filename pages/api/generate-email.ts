@@ -17,6 +17,14 @@ export default async function handler(
     console.error('Database initialization error:', error);
   }
 
+  // Initialize admin from environment variables if needed (only on first request)
+  try {
+    const { initAdminFromEnv } = await import('@/lib/init-admin');
+    await initAdminFromEnv();
+  } catch (error: any) {
+    // Silently fail - admin init is optional
+  }
+
   try {
     // DEBUG: Log API key status (without exposing the actual key)
     const hasApiKey = !!process.env.OPENAI_API_KEY;

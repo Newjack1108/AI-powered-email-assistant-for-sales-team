@@ -16,6 +16,15 @@ export default async function handler(
     console.error('Database initialization error:', error);
   }
 
+  // Initialize admin from environment variables if needed (only on first request)
+  try {
+    const { initAdminFromEnv } = await import('@/lib/init-admin');
+    await initAdminFromEnv();
+  } catch (error: any) {
+    // Silently fail - admin init is optional
+    console.log('Admin initialization skipped:', error.message);
+  }
+
   try {
     const { email, password } = req.body;
 
