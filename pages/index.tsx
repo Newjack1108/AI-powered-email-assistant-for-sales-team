@@ -305,6 +305,10 @@ export default function Home() {
     setMessage(null);
 
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
       const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -316,9 +320,21 @@ export default function Home() {
           attachments: attachments.length > 0 ? attachments : null,
           sendNow,
         }),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
+      clearTimeout(timeoutId);
+
+      // Check if response is ok before trying to parse JSON
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        setMessage({ type: 'error', text: 'Invalid response from server. Please check the console for details.' });
+        setSending(false);
+        return;
+      }
       
       if (res.ok) {
         if (sendNow) {
@@ -345,10 +361,17 @@ export default function Home() {
           setMessage({ type: 'success', text: 'Email saved as draft!' });
         }
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to send email' });
+        const errorMessage = data.error || data.message || 'Failed to send email';
+        console.error('Email send error:', errorMessage, data);
+        setMessage({ type: 'error', text: errorMessage });
       }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to send email' });
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        setMessage({ type: 'error', text: 'Request timed out. Please check your email configuration and try again.' });
+      } else {
+        console.error('Error sending email:', error);
+        setMessage({ type: 'error', text: error.message || 'Failed to send email. Please check the console for details.' });
+      }
     } finally {
       setSending(false);
     }

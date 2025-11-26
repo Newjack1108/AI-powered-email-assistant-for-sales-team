@@ -132,19 +132,31 @@ async function sendEmailWithSMTP(
   options: SendEmailOptions
 ): Promise<void> {
   if (!user.email_smtp_host || !user.email_smtp_port || !user.email_smtp_user || !user.email_smtp_password) {
-    throw new Error('SMTP configuration incomplete');
+    throw new Error('SMTP configuration incomplete. Please check your email settings in Profile.');
   }
 
   // Decrypt SMTP password
-  const smtpPassword = decrypt(user.email_smtp_password);
+  let smtpPassword: string;
+  try {
+    smtpPassword = decrypt(user.email_smtp_password);
+  } catch (error: any) {
+    console.error('Error decrypting SMTP password:', error);
+    throw new Error('Failed to decrypt email password. Please reconfigure your email settings.');
+  }
 
   // Create transporter for user
-  const transporter = createTransporterForUser({
-    host: user.email_smtp_host,
-    port: user.email_smtp_port,
-    user: user.email_smtp_user,
-    password: smtpPassword,
-  });
+  let transporter;
+  try {
+    transporter = createTransporterForUser({
+      host: user.email_smtp_host,
+      port: user.email_smtp_port,
+      user: user.email_smtp_user,
+      password: smtpPassword,
+    });
+  } catch (error: any) {
+    console.error('Error creating SMTP transporter:', error);
+    throw new Error(`Failed to create email connection: ${error.message}`);
+  }
 
   const fromEmail = user.email_smtp_user || options.from;
   const fromName = user.email_from_name || user.name || 'Sales Team';
@@ -154,16 +166,29 @@ async function sendEmailWithSMTP(
     ? options.body 
     : options.body.replace(/\n/g, '<br>');
 
-  await transporter.sendMail({
-    from: `"${fromName}" <${fromEmail}>`,
-    to: options.to,
-    cc: options.cc,
-    bcc: options.bcc,
-    subject: options.subject,
-    html: htmlBody,
-    text: options.body,
-    attachments: options.attachments,
-  });
+  try {
+    // Verify connection first
+    await transporter.verify();
+  } catch (error: any) {
+    console.error('SMTP connection verification failed:', error);
+    throw new Error(`Email server connection failed: ${error.message}. Please check your SMTP settings (host, port, username, password).`);
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to: options.to,
+      cc: options.cc,
+      bcc: options.bcc,
+      subject: options.subject,
+      html: htmlBody,
+      text: options.body,
+      attachments: options.attachments,
+    });
+  } catch (error: any) {
+    console.error('Error sending email via SMTP:', error);
+    throw new Error(`Failed to send email: ${error.message}. Please check your SMTP settings and try again.`);
+  }
 }
 
 // Legacy function - uses system default SMTP (for backward compatibility)
