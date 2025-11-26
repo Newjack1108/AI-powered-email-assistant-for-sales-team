@@ -221,20 +221,29 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
     body = body.replace(/\n\s*---.*$/gmi, ''); // Remove separator lines
     
     // Remove company contact information patterns (address, phone, email at the end)
-    // Pattern: Company name, address, Tel/Phone, email
-    body = body.replace(/\n\s*Cheshire Stables\s*\n.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, '');
-    body = body.replace(/\n\s*[A-Z][a-z]+\s+House.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, ''); // Address pattern
-    body = body.replace(/\n\s*Ibex House.*?sales@.*$/gmi, ''); // Specific address pattern
-    body = body.replace(/\n\s*Nat Lane.*?sales@.*$/gmi, ''); // Address continuation
-    body = body.replace(/\n\s*Winsford.*?sales@.*$/gmi, ''); // City pattern
-    body = body.replace(/\n\s*Cheshire.*?sales@.*$/gmi, ''); // County pattern
-    body = body.replace(/\n\s*CW7\s+\d+[A-Z]{2}.*?sales@.*$/gmi, ''); // Postcode pattern
+    // Multi-line pattern: Company name, address lines, Tel/Phone, email
+    // This catches patterns like:
+    // Cheshire Stables
+    // Ibex House, Nat Lane, Winsford, Cheshire, CW7 3BS
+    // Tel: 01606 352352
+    // sales@cheshiresheds.co.uk
+    body = body.replace(/\n\s*Cheshire Stables\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    body = body.replace(/\n\s*[A-Z][a-z]+\s+House[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // Address pattern
+    body = body.replace(/\n\s*Ibex House[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // Specific address
+    body = body.replace(/\n\s*Nat Lane[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // Address continuation
+    body = body.replace(/\n\s*Winsford[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // City pattern
+    body = body.replace(/\n\s*Cheshire[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // County pattern
+    body = body.replace(/\n\s*CW7\s+\d+[A-Z]{2}[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // Postcode pattern
     
-    // Remove any remaining company contact info after "Warm regards," or similar
+    // Remove any remaining company contact info after "Warm regards," or similar (single line patterns)
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables.*$/gmi, '$1,');
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*[A-Z][a-z]+\s+House.*$/gmi, '$1,');
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?(?:Tel|Phone):\s*\d+.*$/gmi, '$1,');
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?@.*$/gmi, '$1,');
+    
+    // Remove multi-line company contact blocks that appear after a closing
+    // Pattern: Closing, then company name, then address/contact info
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone|Ibex|Nat Lane|Winsford|CW7|sales@).*$/gmi, '$1,');
     
     body = body.trim();
 
@@ -479,19 +488,23 @@ Subject: [shortened subject]
     shortenedBody = shortenedBody.replace(/\n\s*---.*$/gmi, '');
     
     // Remove company contact information patterns (address, phone, email at the end)
-    shortenedBody = shortenedBody.replace(/\n\s*Cheshire Stables\s*\n.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, '');
-    shortenedBody = shortenedBody.replace(/\n\s*[A-Z][a-z]+\s+House.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, '');
-    shortenedBody = shortenedBody.replace(/\n\s*Ibex House.*?sales@.*$/gmi, '');
-    shortenedBody = shortenedBody.replace(/\n\s*Nat Lane.*?sales@.*$/gmi, '');
-    shortenedBody = shortenedBody.replace(/\n\s*Winsford.*?sales@.*$/gmi, '');
-    shortenedBody = shortenedBody.replace(/\n\s*Cheshire.*?sales@.*$/gmi, '');
-    shortenedBody = shortenedBody.replace(/\n\s*CW7\s+\d+[A-Z]{2}.*?sales@.*$/gmi, '');
+    // Multi-line pattern: Company name, address lines, Tel/Phone, email
+    shortenedBody = shortenedBody.replace(/\n\s*Cheshire Stables\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*[A-Z][a-z]+\s+House[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Ibex House[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Nat Lane[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Winsford[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Cheshire[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*CW7\s+\d+[A-Z]{2}[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
     
-    // Remove any remaining company contact info after "Warm regards," or similar
+    // Remove any remaining company contact info after "Warm regards," or similar (single line patterns)
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables.*$/gmi, '$1,');
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*[A-Z][a-z]+\s+House.*$/gmi, '$1,');
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?(?:Tel|Phone):\s*\d+.*$/gmi, '$1,');
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?@.*$/gmi, '$1,');
+    
+    // Remove multi-line company contact blocks that appear after a closing
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone|Ibex|Nat Lane|Winsford|CW7|sales@).*$/gmi, '$1,');
     
     shortenedBody = shortenedBody.trim();
 
