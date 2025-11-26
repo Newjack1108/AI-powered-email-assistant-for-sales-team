@@ -712,6 +712,22 @@ export default function Home() {
                 <button
                   className="btn btn-outline"
                   onClick={async () => {
+                    // Note: mailto links don't support attachments
+                    // If attachments exist, suggest using .eml file instead
+                    if (attachments.length > 0) {
+                      const useEML = confirm(
+                        'The "Open in Email Client" option cannot include attachments.\n\n' +
+                        'Would you like to download the .eml file instead (which includes attachments)?\n\n' +
+                        'Click OK to download .eml file, or Cancel to open without attachments.'
+                      );
+                      
+                      if (useEML) {
+                        await saveEmailToHistory('downloaded');
+                        await downloadAsEML();
+                        return;
+                      }
+                    }
+                    
                     // Create mailto link - use %0A (LF) which works better with Outlook
                     const subject = encodeURIComponent(generatedEmail.subject);
                     
@@ -731,6 +747,7 @@ export default function Home() {
                   }}
                 >
                   Open in Email Client
+                  {attachments.length > 0 && <span style={{ fontSize: '0.8em', display: 'block', color: '#ff9800', marginTop: '2px' }}>(No attachments)</span>}
                 </button>
                 <button
                   className="btn btn-outline"
