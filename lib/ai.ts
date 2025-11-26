@@ -453,6 +453,39 @@ Subject: [shortened subject]
     // Remove any remaining "Subject:" or "Body:" labels
     shortenedBody = shortenedBody.replace(/^(Subject|Body):\s*/gmi, '').trim();
 
+    // Remove any signature-like text that might have been generated during shortening
+    shortenedBody = shortenedBody.replace(/\n\s*\[Your Name\].*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*\[Name\].*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Cheshire Stables.*CSGB Group.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*---.*$/gmi, '');
+    shortenedBody = shortenedBody.trim();
+
+    // Preserve the original user signature if it exists (it should be at the very end)
+    // Extract signature from original body (look for pattern: name, title, company, phone, email)
+    const originalSignatureMatch = body.match(/\n\n([A-Z][^\n]+\n(?:[^\n]+\n)*[^\n@]+\n(?:Phone|Email):[^\n]+(?:\nEmail:[^\n]+)?)$/);
+    if (originalSignatureMatch) {
+      // This looks like a user signature (has name, possibly title/company, and phone/email)
+      const potentialSig = originalSignatureMatch[1];
+      if (potentialSig.match(/(Phone|Email|@)/i)) {
+        // This is likely the user signature, preserve it at the end
+        // Remove any closing that might be before it in shortened version
+        shortenedBody = shortenedBody.replace(/\n\n(Best regards|Kind regards|Warm regards|Regards),?\s*$/i, '');
+        shortenedBody = shortenedBody.trim();
+        // Ensure proper closing before signature
+        const hasClosing = /(Best regards|Kind regards|Warm regards|Regards|Sincerely|Thank you|Thanks),?\s*$/i.test(shortenedBody);
+        if (!hasClosing) {
+          shortenedBody += '\n\nBest regards,';
+        }
+        shortenedBody += '\n\n' + potentialSig;
+      }
+    } else {
+      // Ensure proper closing if no signature to preserve
+      const hasClosing = /(Best regards|Kind regards|Warm regards|Regards|Sincerely|Thank you|Thanks),?\s*$/i.test(shortenedBody);
+      if (!hasClosing && shortenedBody.length > 0) {
+        shortenedBody += '\n\nBest regards,';
+      }
+    }
+
     return { subject: shortenedSubject, body: shortenedBody };
   } catch (error: any) {
     console.error('Error shortening email with assistant:', error);
