@@ -12,6 +12,11 @@ interface User {
   signature_email?: string;
   signature_company?: string;
   email_provider?: 'oauth' | 'smtp' | null;
+  email_smtp_host?: string;
+  email_smtp_port?: number;
+  email_smtp_user?: string;
+  email_from_name?: string;
+  email_configured_at?: string;
 }
 
 export function useAuth(requireAuth: boolean = false) {

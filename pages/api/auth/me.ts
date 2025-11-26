@@ -45,6 +45,12 @@ export default async function handler(
         signature_email: fullUser.signature_email,
         signature_company: fullUser.signature_company,
         email_provider: fullUser.email_provider,
+        // Include SMTP configuration fields (but NOT the password for security)
+        email_smtp_host: fullUser.email_smtp_host,
+        email_smtp_port: fullUser.email_smtp_port,
+        email_smtp_user: fullUser.email_smtp_user,
+        email_from_name: fullUser.email_from_name,
+        email_configured_at: fullUser.email_configured_at,
       },
     });
   } catch (error: any) {
