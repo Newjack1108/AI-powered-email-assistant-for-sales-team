@@ -7,14 +7,22 @@ import { v4 as uuidv4 } from 'uuid';
  * This allows setting up admin credentials via Railway environment variables
  */
 export async function initAdminFromEnv() {
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const adminName = process.env.ADMIN_NAME || 'Admin User';
+  // Get all possible variations of the env var names (case-insensitive check)
+  const allEnvVars = Object.keys(process.env);
+  const adminEmailKey = allEnvVars.find(key => key.toUpperCase() === 'ADMIN_EMAIL');
+  const adminPasswordKey = allEnvVars.find(key => key.toUpperCase() === 'ADMIN_PASSWORD');
+  const adminNameKey = allEnvVars.find(key => key.toUpperCase() === 'ADMIN_NAME');
+  
+  const adminEmail = adminEmailKey ? process.env[adminEmailKey] : process.env.ADMIN_EMAIL;
+  const adminPassword = adminPasswordKey ? process.env[adminPasswordKey] : process.env.ADMIN_PASSWORD;
+  const adminName = adminNameKey ? process.env[adminNameKey] : (process.env.ADMIN_NAME || 'Admin User');
 
   console.log('🔍 Checking for admin credentials in environment variables...');
-  console.log(`   ADMIN_EMAIL: ${adminEmail ? 'SET' : 'NOT SET'}`);
-  console.log(`   ADMIN_PASSWORD: ${adminPassword ? 'SET' : 'NOT SET'}`);
+  console.log(`   ADMIN_EMAIL: ${adminEmail ? `SET (value: ${adminEmail.substring(0, 3)}...)` : 'NOT SET'}`);
+  console.log(`   ADMIN_PASSWORD: ${adminPassword ? 'SET (hidden)' : 'NOT SET'}`);
   console.log(`   ADMIN_NAME: ${adminName}`);
+  console.log(`   Total env vars: ${allEnvVars.length}`);
+  console.log(`   Env var keys containing 'ADMIN': ${allEnvVars.filter(k => k.toUpperCase().includes('ADMIN')).join(', ') || 'NONE'}`);
 
   if (!adminEmail || !adminPassword) {
     console.log('⚠️ No admin credentials found in environment variables');
