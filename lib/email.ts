@@ -36,6 +36,12 @@ export function createTransporterForUser(smtpConfig: {
       user: smtpConfig.user,
       pass: smtpConfig.password,
     },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000, // 10 seconds
+    socketTimeout: 10000, // 10 seconds
+    // Enable debug for troubleshooting (set to true for verbose logging)
+    debug: process.env.NODE_ENV === 'development',
+    logger: process.env.NODE_ENV === 'development',
   });
 }
 
