@@ -70,8 +70,10 @@ export default async function handler(
       userSignature,
     };
 
-    if (!formData.recipientEmail) {
-      return res.status(400).json({ error: 'Recipient email is required' });
+    // If receivedEmail is provided, recipientEmail is optional (AI will extract it)
+    // Otherwise, recipientEmail is required
+    if (!formData.receivedEmail && !formData.recipientEmail) {
+      return res.status(400).json({ error: 'Recipient email is required, or paste a received email to reply to' });
     }
 
     const { subject, body } = await generateEmail(formData);
