@@ -521,13 +521,13 @@ Subject: [shortened subject]
     shortenedBody = shortenedBody.replace(/\n\s*CW7\s+\d+[A-Z]{2}[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, '');
     
     // Remove any remaining company contact info after "Warm regards," or similar (single line patterns)
-    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables.*$/gmi, '$1,');
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*[A-Z][a-z]+\s+House.*$/gmi, '$1,');
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?(?:Tel|Phone):\s*\d+.*$/gmi, '$1,');
     shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?@.*$/gmi, '$1,');
     
     // Remove multi-line company contact blocks that appear after a closing
-    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone|Ibex|Nat Lane|Winsford|CW7|sales@).*$/gmi, '$1,');
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings)\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone|Ibex|Nat Lane|Winsford|CW7|sales@).*$/gmi, '$1,');
     
     shortenedBody = shortenedBody.trim();
 
