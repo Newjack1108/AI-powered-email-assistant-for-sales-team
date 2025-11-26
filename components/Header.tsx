@@ -67,14 +67,17 @@ export default function Header() {
         <nav className="nav-links">
           <Link href="/">Compose</Link>
           <Link href="/history">History</Link>
-          <Link href="/templates">Templates</Link>
-          <Link href="/special-offers">Offers</Link>
-          {user && (
-            <Link href="/profile">Profile</Link>
-          )}
-          {user?.role === 'admin' && (
-            <Link href="/admin/users">Users</Link>
-          )}
+              <Link href="/templates">Templates</Link>
+              <Link href="/special-offers">Offers</Link>
+              {user && (
+                <Link href="/profile">Profile</Link>
+              )}
+              {user?.role === 'admin' && (
+                <>
+                  <Link href="/admin/users">Users</Link>
+                  <Link href="/admin/product-types">Product Types</Link>
+                </>
+              )}
         </nav>
         <div className="header-user">
           {loading ? (

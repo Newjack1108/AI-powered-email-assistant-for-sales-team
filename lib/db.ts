@@ -41,6 +41,14 @@ export interface SpecialOffer {
   updated_at: string;
 }
 
+export interface ProductType {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -87,6 +95,10 @@ if (process.env.DATABASE_URL) {
       getSpecialOffers: postgresModule.getSpecialOffers,
       getSpecialOffer: postgresModule.getSpecialOffer,
       deleteSpecialOffer: postgresModule.deleteSpecialOffer,
+      saveProductType: postgresModule.saveProductType,
+      getProductTypes: postgresModule.getProductTypes,
+      getProductType: postgresModule.getProductType,
+      deleteProductType: postgresModule.deleteProductType,
     };
     console.log('Using PostgreSQL database');
     return dbModule;
@@ -199,6 +211,17 @@ if (process.env.DATABASE_URL) {
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create product_types table
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS product_types (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -413,6 +436,37 @@ if (process.env.DATABASE_URL) {
     await dbRun(`DELETE FROM special_offers WHERE id = ?`, [id]);
   };
 
+  // Product types functions
+  const saveProductType = async (productType: Omit<ProductType, 'created_at' | 'updated_at'>) => {
+    await dbRun(
+      `INSERT INTO product_types (id, name, description, updated_at) 
+       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(id) DO UPDATE SET
+         name = excluded.name,
+         description = excluded.description,
+         updated_at = CURRENT_TIMESTAMP`,
+      [productType.id, productType.name, productType.description || null]
+    );
+  };
+
+  const getProductTypes = async (): Promise<ProductType[]> => {
+    try {
+      const result = await dbAll(`SELECT * FROM product_types ORDER BY name ASC`);
+      return Array.isArray(result) ? (result as ProductType[]) : [];
+    } catch (error) {
+      console.error('Error fetching product types:', error);
+      return [];
+    }
+  };
+
+  const getProductType = async (id: string): Promise<ProductType | undefined> => {
+    return (await dbGet(`SELECT * FROM product_types WHERE id = ?`, [id])) as ProductType | undefined;
+  };
+
+  const deleteProductType = async (id: string) => {
+    await dbRun(`DELETE FROM product_types WHERE id = ?`, [id]);
+  };
+
   const getUsers = async (): Promise<User[]> => {
     try {
       const result = await dbAll(`SELECT * FROM users ORDER BY created_at DESC`);
@@ -454,6 +508,10 @@ if (process.env.DATABASE_URL) {
     getSpecialOffers,
     getSpecialOffer,
     deleteSpecialOffer,
+    saveProductType,
+    getProductTypes,
+    getProductType,
+    deleteProductType,
   };
 }
 

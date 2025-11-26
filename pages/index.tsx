@@ -36,6 +36,7 @@ export default function Home() {
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [specialOffers, setSpecialOffers] = useState<{ id: string; name: string; description: string }[]>([]);
+  const [productTypes, setProductTypes] = useState<{ id: string; name: string; description?: string }[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [generatedEmail, setGeneratedEmail] = useState<{ subject: string; body: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,7 @@ export default function Home() {
   useEffect(() => {
     loadTemplates();
     loadSpecialOffers();
+    loadProductTypes();
   }, []);
 
   const loadSpecialOffers = async () => {
@@ -60,6 +62,21 @@ export default function Home() {
     } catch (error) {
       console.error('Error loading special offers:', error);
       setSpecialOffers([]);
+    }
+  };
+
+  const loadProductTypes = async () => {
+    try {
+      const res = await fetch('/api/product-types');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      // Ensure data is always an array
+      setProductTypes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading product types:', error);
+      setProductTypes([]);
     }
   };
 
@@ -413,12 +430,17 @@ export default function Home() {
                 onChange={handleInputChange}
               >
                 <option value="">Select product type</option>
-                <option value="Stables Shelters">Stables Shelters</option>
-                <option value="Sheds">Sheds</option>
-                <option value="Log Cabins">Log Cabins</option>
-                <option value="Garden Offices">Garden Offices</option>
-                <option value="Barns">Barns</option>
+                {productTypes.map(pt => (
+                  <option key={pt.id} value={pt.name}>
+                    {pt.name}
+                  </option>
+                ))}
               </select>
+              {productTypes.length === 0 && (
+                <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
+                  No product types available. <Link href="/admin/product-types">Admin: Manage Product Types</Link>
+                </small>
+              )}
             </div>
           </div>
 

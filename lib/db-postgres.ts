@@ -61,6 +61,14 @@ export interface SpecialOffer {
   updated_at: string;
 }
 
+export interface ProductType {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Initialize database tables
 export async function initDb() {
   // Create emails table
@@ -124,6 +132,17 @@ export async function initDb() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create product_types table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS product_types (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
@@ -410,6 +429,53 @@ export async function getSpecialOffer(id: string): Promise<SpecialOffer | undefi
 
 export async function deleteSpecialOffer(id: string) {
   await pool.query(`DELETE FROM special_offers WHERE id = $1`, [id]);
+}
+
+// Product types functions
+export async function saveProductType(productType: Omit<ProductType, 'created_at' | 'updated_at'>) {
+  await pool.query(
+    `INSERT INTO product_types (id, name, description, updated_at) 
+     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+     ON CONFLICT(id) DO UPDATE SET
+       name = EXCLUDED.name,
+       description = EXCLUDED.description,
+       updated_at = CURRENT_TIMESTAMP`,
+    [productType.id, productType.name, productType.description || null]
+  );
+}
+
+export async function getProductTypes(): Promise<ProductType[]> {
+  try {
+    const result = await pool.query(`SELECT * FROM product_types ORDER BY name ASC`);
+    return result.rows.map(row => ({
+      ...row,
+      created_at: row.created_at?.toISOString() || new Date().toISOString(),
+      updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+    })) as ProductType[];
+  } catch (error) {
+    console.error('Error fetching product types:', error);
+    return [];
+  }
+}
+
+export async function getProductType(id: string): Promise<ProductType | undefined> {
+  try {
+    const result = await pool.query(`SELECT * FROM product_types WHERE id = $1`, [id]);
+    if (result.rows.length === 0) return undefined;
+    const row = result.rows[0];
+    return {
+      ...row,
+      created_at: row.created_at?.toISOString() || new Date().toISOString(),
+      updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+    } as ProductType;
+  } catch (error) {
+    console.error('Error fetching product type:', error);
+    return undefined;
+  }
+}
+
+export async function deleteProductType(id: string) {
+  await pool.query(`DELETE FROM product_types WHERE id = $1`, [id]);
 }
 
 // Initialize database on import (only if DATABASE_URL is set)
