@@ -411,6 +411,20 @@ if (process.env.DATABASE_URL) {
     await dbRun(`DELETE FROM special_offers WHERE id = ?`, [id]);
   };
 
+  const getUsers = async (): Promise<User[]> => {
+    try {
+      const result = await dbAll(`SELECT * FROM users ORDER BY created_at DESC`);
+      return Array.isArray(result) ? (result as User[]) : [];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  };
+
+  const deleteUser = async (id: string) => {
+    await dbRun(`DELETE FROM users WHERE id = ?`, [id]);
+  };
+
   // Initialize database on import (but don't block)
   initDb().catch((error) => {
     console.error('Error initializing SQLite database:', error);
@@ -432,6 +446,8 @@ if (process.env.DATABASE_URL) {
     createUser,
     updateUser,
     updateUserPassword,
+    getUsers,
+    deleteUser,
     saveSpecialOffer,
     getSpecialOffers,
     getSpecialOffer,
@@ -544,4 +560,14 @@ export const getSpecialOffer = async (...args: any[]) => {
 export const deleteSpecialOffer = async (...args: any[]) => {
   const module = await ensureDbModule();
   return module.deleteSpecialOffer(...args);
+};
+
+export const getUsers = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getUsers(...args);
+};
+
+export const deleteUser = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.deleteUser(...args);
 };

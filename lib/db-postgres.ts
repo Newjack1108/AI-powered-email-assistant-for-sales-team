@@ -347,6 +347,24 @@ export async function updateUserPassword(id: string, passwordHash: string) {
   );
 }
 
+export async function getUsers(): Promise<User[]> {
+  try {
+    const result = await pool.query(`SELECT * FROM users ORDER BY created_at DESC`);
+    return result.rows.map(row => ({
+      ...row,
+      created_at: row.created_at?.toISOString() || new Date().toISOString(),
+      updated_at: row.updated_at?.toISOString() || new Date().toISOString(),
+    })) as User[];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+}
+
+export async function deleteUser(id: string) {
+  await pool.query(`DELETE FROM users WHERE id = $1`, [id]);
+}
+
 // Special offers functions
 export async function saveSpecialOffer(offer: Omit<SpecialOffer, 'created_at' | 'updated_at'>) {
   await pool.query(

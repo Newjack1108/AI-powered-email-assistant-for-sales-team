@@ -72,6 +72,9 @@ export default function Header() {
           {user && (
             <Link href="/profile">Profile</Link>
           )}
+          {user?.role === 'admin' && (
+            <Link href="/admin/users">Users</Link>
+          )}
         </nav>
         <div className="header-user">
           {loading ? (

@@ -13,8 +13,15 @@ export default function Profile() {
     signature_email: '',
     signature_company: '',
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -32,6 +39,55 @@ export default function Profile() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangingPassword(true);
+    setMessage(null);
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setMessage({ type: 'error', text: 'New passwords do not match' });
+      setChangingPassword(false);
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters long' });
+      setChangingPassword(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Password changed successfully!' });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setShowPasswordForm(false);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to change password' });
+      }
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      setMessage({ type: 'error', text: 'Failed to change password' });
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -203,6 +259,85 @@ export default function Profile() {
               {saving ? 'Saving...' : 'Save Profile'}
             </button>
           </form>
+
+          <div style={{ marginTop: '40px', paddingTop: '40px', borderTop: '1px solid #eee' }}>
+            <h3 style={{ marginBottom: '16px' }}>Change Password</h3>
+            
+            {!showPasswordForm ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowPasswordForm(true)}
+              >
+                Change Password
+              </button>
+            ) : (
+              <form onSubmit={handlePasswordSubmit} style={{ maxWidth: '500px' }}>
+                <div className="form-group">
+                  <label htmlFor="currentPassword">Current Password</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    placeholder="Enter your current password"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="newPassword">New Password</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength={6}
+                    placeholder="Enter new password (min 6 characters)"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="confirmPassword">Confirm New Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength={6}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={changingPassword}
+                  >
+                    {changingPassword ? 'Changing...' : 'Change Password'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowPasswordForm(false);
+                      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                      setMessage(null);
+                    }}
+                    disabled={changingPassword}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </>
