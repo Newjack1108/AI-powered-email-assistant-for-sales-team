@@ -112,15 +112,22 @@ When writing emails:
 4. Address any urgency or time-sensitive offers
 5. Include qualification questions if needed
 6. Mention special offers and lead times when provided
-7. End with a clear call-to-action and contact information
+7. End with a clear call-to-action
 8. Match the specified mood/tone throughout the entire email
+
+CRITICAL - SIGNATURE RULES:
+- DO NOT include any signature, name, or contact information in the email body
+- DO NOT include phrases like "[Your Name]", "Warm regards, [Name]", or any placeholder names
+- DO NOT include company names, phone numbers, or email addresses at the end
+- End the email with a professional closing like "Best regards," or "Kind regards," followed by a blank line, but NO name or signature after it
+- The signature will be added automatically by the system, so you must NOT include one
 
 Format your response as:
 Subject: [email subject]
 
 [email body]
 
-The email should match the specified mood/tone, be engaging, and tailored to the specific customer's needs and situation.`;
+The email should match the specified mood/tone, be engaging, and tailored to the specific customer's needs and situation. Remember: NO signature or contact details in the body - end with just a closing like "Best regards,".`;
 }
 
 export async function generateEmail(formData: EmailFormData): Promise<{ subject: string; body: string }> {
