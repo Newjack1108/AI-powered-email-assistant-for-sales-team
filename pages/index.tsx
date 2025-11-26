@@ -163,12 +163,12 @@ export default function Home() {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const downloadAsEML = () => {
+  const downloadAsEML = async () => {
     if (!generatedEmail) return;
 
-    // Create .eml file content (Outlook-compatible email format)
-    const fromEmail = 'sales@cheshiresheds.co.uk'; // You can make this configurable
-    const fromName = 'Cheshire Sheds and Garden Buildings';
+    // Get user's email for from address
+    const fromEmail = user?.email_smtp_user || user?.email || 'sales@cheshiresheds.co.uk';
+    const fromName = user?.email_from_name || user?.name || 'Cheshire Sheds and Garden Buildings';
     const toEmail = formData.recipientEmail;
     const toName = formData.recipientName || '';
     
@@ -181,18 +181,73 @@ export default function Home() {
       .replace(/\r/g, '\n')
       .replace(/\n/g, '\r\n'); // Convert to CRLF for email
     
-    // Create .eml file content
-    const emlContent = [
-      `From: ${fromName} <${fromEmail}>`,
-      `To: ${toName ? `${toName} <${toEmail}>` : toEmail}`,
-      `Subject: ${generatedEmail.subject}`,
-      `Date: ${date}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: text/plain; charset=utf-8`,
-      `Content-Transfer-Encoding: 8bit`,
-      ``,
-      bodyText
-    ].join('\r\n');
+    // Build .eml file content
+    let emlContent = '';
+    
+    if (attachments.length > 0) {
+      // Multipart message with attachments
+      const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      emlContent = [
+        `From: ${fromName} <${fromEmail}>`,
+        `To: ${toName ? `${toName} <${toEmail}>` : toEmail}`,
+        `Subject: ${generatedEmail.subject}`,
+        `Date: ${date}`,
+        `MIME-Version: 1.0`,
+        `Content-Type: multipart/mixed; boundary="${boundary}"`,
+        ``,
+        `--${boundary}`,
+        `Content-Type: text/plain; charset=utf-8`,
+        `Content-Transfer-Encoding: 8bit`,
+        ``,
+        bodyText,
+        ``,
+      ].join('\r\n');
+      
+      // Add attachments
+      for (const attachment of attachments) {
+        try {
+          // Fetch the attachment file
+          const response = await fetch(attachment.path);
+          const blob = await response.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          
+          // Get content type
+          const contentType = attachment.mimetype || blob.type || 'application/octet-stream';
+          
+          // Add attachment to .eml
+          emlContent += [
+            `--${boundary}`,
+            `Content-Type: ${contentType}; name="${attachment.filename}"`,
+            `Content-Transfer-Encoding: base64`,
+            `Content-Disposition: attachment; filename="${attachment.filename}"`,
+            ``,
+            base64.match(/.{1,76}/g)?.join('\r\n') || base64, // Split base64 into 76-char lines
+            ``,
+          ].join('\r\n');
+        } catch (error) {
+          console.error(`Error processing attachment ${attachment.filename}:`, error);
+          // Continue with other attachments
+        }
+      }
+      
+      // Close multipart boundary
+      emlContent += `--${boundary}--\r\n`;
+    } else {
+      // Simple text message without attachments
+      emlContent = [
+        `From: ${fromName} <${fromEmail}>`,
+        `To: ${toName ? `${toName} <${toEmail}>` : toEmail}`,
+        `Subject: ${generatedEmail.subject}`,
+        `Date: ${date}`,
+        `MIME-Version: 1.0`,
+        `Content-Type: text/plain; charset=utf-8`,
+        `Content-Transfer-Encoding: 8bit`,
+        ``,
+        bodyText
+      ].join('\r\n');
+    }
 
     // Create blob and download
     const blob = new Blob([emlContent], { type: 'message/rfc822' });
