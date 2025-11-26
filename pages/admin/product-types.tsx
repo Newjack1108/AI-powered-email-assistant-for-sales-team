@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 interface ProductType {
   id: string;
   name: string;
+  trading_name?: string;
   description?: string;
   created_at: string;
   updated_at: string;
@@ -20,6 +21,7 @@ export default function ProductTypes() {
   const [editingProductType, setEditingProductType] = useState<ProductType | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    trading_name: '',
     description: '',
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -81,7 +83,7 @@ export default function ProductTypes() {
         setMessage({ type: 'success', text: editingProductType ? 'Product type updated!' : 'Product type created!' });
         setShowForm(false);
         setEditingProductType(null);
-        setFormData({ name: '', description: '' });
+        setFormData({ name: '', trading_name: '', description: '' });
         loadProductTypes();
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to save product type.' });
@@ -98,6 +100,7 @@ export default function ProductTypes() {
     setEditingProductType(productType);
     setFormData({
       name: productType.name,
+      trading_name: productType.trading_name || '',
       description: productType.description || '',
     });
     setShowForm(true);
@@ -191,7 +194,7 @@ export default function ProductTypes() {
               onClick={() => {
                 setShowForm(!showForm);
                 setEditingProductType(null);
-                setFormData({ name: '', description: '' });
+                setFormData({ name: '', trading_name: '', description: '' });
               }}
             >
               {showForm ? 'Cancel' : '+ New Product Type'}
@@ -211,6 +214,20 @@ export default function ProductTypes() {
                   required
                   placeholder="e.g., Stables Shelters"
                 />
+              </div>
+              <div className="form-group">
+                <label htmlFor="trading_name">Trading Name (Optional)</label>
+                <input
+                  type="text"
+                  id="trading_name"
+                  name="trading_name"
+                  value={formData.trading_name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Cheshire Stables (used in emails)"
+                />
+                <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                  This is the name used when referring to this product type in generated emails
+                </small>
               </div>
               <div className="form-group">
                 <label htmlFor="description">Description (Optional)</label>
@@ -242,6 +259,7 @@ export default function ProductTypes() {
                 <thead>
                   <tr>
                     <th>Name</th>
+                    <th>Trading Name</th>
                     <th>Description</th>
                     <th>Last Updated</th>
                     <th>Actions</th>
@@ -251,6 +269,7 @@ export default function ProductTypes() {
                   {productTypes.map(pt => (
                     <tr key={pt.id}>
                       <td><strong>{pt.name}</strong></td>
+                      <td>{pt.trading_name || <em style={{ color: '#999' }}>None</em>}</td>
                       <td>{pt.description || <em style={{ color: '#999' }}>No description</em>}</td>
                       <td>{new Date(pt.updated_at).toLocaleString()}</td>
                       <td>

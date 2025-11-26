@@ -44,6 +44,7 @@ export interface SpecialOffer {
 export interface ProductType {
   id: string;
   name: string;
+  trading_name?: string;
   description?: string;
   created_at: string;
   updated_at: string;
@@ -281,6 +282,7 @@ if (process.env.DATABASE_URL) {
       CREATE TABLE IF NOT EXISTS product_types (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
+        trading_name TEXT,
         description TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -549,13 +551,14 @@ if (process.env.DATABASE_URL) {
   // Product types functions
   const saveProductType = async (productType: Omit<ProductType, 'created_at' | 'updated_at'>) => {
     await dbRun(
-      `INSERT INTO product_types (id, name, description, updated_at) 
-       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      `INSERT INTO product_types (id, name, trading_name, description, updated_at) 
+       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
        ON CONFLICT(id) DO UPDATE SET
          name = excluded.name,
+         trading_name = excluded.trading_name,
          description = excluded.description,
          updated_at = CURRENT_TIMESTAMP`,
-      [productType.id, productType.name, productType.description || null]
+      [productType.id, productType.name, productType.trading_name || null, productType.description || null]
     );
   };
 

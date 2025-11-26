@@ -39,7 +39,7 @@ export default function Home() {
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [specialOffers, setSpecialOffers] = useState<{ id: string; name: string; description: string }[]>([]);
-  const [productTypes, setProductTypes] = useState<{ id: string; name: string; description?: string }[]>([]);
+  const [productTypes, setProductTypes] = useState<{ id: string; name: string; trading_name?: string; description?: string }[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [generatedEmail, setGeneratedEmail] = useState<{ subject: string; body: string } | null>(null);
   const [loading, setLoading] = useState(false);

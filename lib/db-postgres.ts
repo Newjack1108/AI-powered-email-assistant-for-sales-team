@@ -75,6 +75,7 @@ export interface SpecialOffer {
 export interface ProductType {
   id: string;
   name: string;
+  trading_name?: string;
   description?: string;
   created_at: string;
   updated_at: string;
@@ -547,13 +548,14 @@ export async function deleteSpecialOffer(id: string) {
 // Product types functions
 export async function saveProductType(productType: Omit<ProductType, 'created_at' | 'updated_at'>) {
   await pool.query(
-    `INSERT INTO product_types (id, name, description, updated_at) 
-     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+    `INSERT INTO product_types (id, name, trading_name, description, updated_at) 
+     VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
      ON CONFLICT(id) DO UPDATE SET
        name = EXCLUDED.name,
+       trading_name = EXCLUDED.trading_name,
        description = EXCLUDED.description,
        updated_at = CURRENT_TIMESTAMP`,
-    [productType.id, productType.name, productType.description || null]
+    [productType.id, productType.name, productType.trading_name || null, productType.description || null]
   );
 }
 

@@ -41,7 +41,7 @@ export default async function handler(
 
   if (req.method === 'POST') {
     try {
-      const { name, description, id } = req.body;
+      const { name, trading_name, description, id } = req.body;
 
       if (!name) {
         return res.status(400).json({ error: 'Name is required' });
@@ -51,6 +51,7 @@ export default async function handler(
       await saveProductType({
         id: productTypeId,
         name,
+        trading_name: trading_name || null,
         description: description || null,
       });
 

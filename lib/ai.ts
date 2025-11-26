@@ -15,6 +15,7 @@ export interface EmailFormData {
   recipientEmail: string;
   leadSource?: string;
   productType?: string;
+  productTypeTradingName?: string;
   urgency?: string;
   isFollowUp?: boolean;
   qualificationInfo?: string;
