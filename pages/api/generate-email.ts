@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { generateEmail, EmailFormData } from '@/lib/ai';
+import { getAuthTokenFromRequest, verifyToken } from '@/lib/auth';
+import { getUserById, initDb } from '@/lib/db';
 
 export default async function handler(
   req: NextApiRequest,
@@ -7,6 +9,12 @@ export default async function handler(
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    await initDb();
+  } catch (error: any) {
+    console.error('Database initialization error:', error);
   }
 
   try {
@@ -25,7 +33,34 @@ export default async function handler(
       });
     }
 
-    const formData: EmailFormData = req.body;
+    // Get current user for signature (optional - don't require auth for email generation)
+    let userSignature = undefined;
+    try {
+      const token = getAuthTokenFromRequest(req);
+      if (token) {
+        const authUser = verifyToken(token);
+        if (authUser) {
+          const user = await getUserById(authUser.id);
+          if (user && (user.signature_name || user.signature_title || user.signature_phone || user.signature_email || user.signature_company)) {
+            userSignature = {
+              name: user.signature_name || undefined,
+              title: user.signature_title || undefined,
+              phone: user.signature_phone || undefined,
+              email: user.signature_email || undefined,
+              company: user.signature_company || undefined,
+            };
+          }
+        }
+      }
+    } catch (error) {
+      // Ignore auth errors - signature is optional
+      console.log('Could not get user signature:', error);
+    }
+
+    const formData: EmailFormData = {
+      ...req.body,
+      userSignature,
+    };
 
     if (!formData.recipientEmail) {
       return res.status(400).json({ error: 'Recipient email is required' });

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
+import Header from '@/components/Header';
 import { format } from 'date-fns';
 
 interface EmailRecord {
@@ -57,28 +57,7 @@ export default function History() {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </Head>
 
-      <div className="header">
-        <div className="header-content">
-          <div className="header-logo-container">
-            <img 
-              src="/logo.png" 
-              alt="Company Logo" 
-              className="header-logo"
-              onError={(e) => {
-                // Hide logo if image doesn't exist
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            <h1>Sales Email Assistant</h1>
-          </div>
-          <nav className="nav-links">
-            <Link href="/">Compose</Link>
-            <Link href="/history">History</Link>
-            <Link href="/templates">Templates</Link>
-            <Link href="/special-offers">Special Offers</Link>
-          </nav>
-        </div>
-      </div>
+      <Header />
 
       <div className="container">
         <div className="card">

@@ -24,6 +24,13 @@ export interface EmailFormData {
   template?: string;
   useTemplateDirectly?: boolean;
   postcode?: string;
+  userSignature?: {
+    name?: string;
+    title?: string;
+    phone?: string;
+    email?: string;
+    company?: string;
+  };
 }
 
 // Create or get the assistant
@@ -187,6 +194,14 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
     // Remove any remaining "Subject:" or "Body:" labels
     body = body.replace(/^(Subject|Body):\s*/gmi, '').trim();
 
+    // Append user signature if provided
+    if (formData.userSignature) {
+      const signature = buildSignature(formData.userSignature);
+      if (signature) {
+        body += '\n\n' + signature;
+      }
+    }
+
     return { subject, body };
   } catch (error: any) {
     console.error('Error generating email with assistant:', error);
@@ -275,4 +290,34 @@ function buildPrompt(formData: EmailFormData): string {
   }
 
   return prompt;
+}
+
+function buildSignature(signature: { name?: string; title?: string; phone?: string; email?: string; company?: string }): string {
+  if (!signature.name && !signature.title && !signature.phone && !signature.email && !signature.company) {
+    return '';
+  }
+
+  let sig = '';
+  
+  if (signature.name) {
+    sig += signature.name;
+  }
+  
+  if (signature.title) {
+    sig += sig ? `\n${signature.title}` : signature.title;
+  }
+  
+  if (signature.company) {
+    sig += sig ? `\n${signature.company}` : signature.company;
+  }
+  
+  if (signature.phone) {
+    sig += sig ? `\nPhone: ${signature.phone}` : `Phone: ${signature.phone}`;
+  }
+  
+  if (signature.email) {
+    sig += sig ? `\nEmail: ${signature.email}` : `Email: ${signature.email}`;
+  }
+
+  return sig.trim();
 }
