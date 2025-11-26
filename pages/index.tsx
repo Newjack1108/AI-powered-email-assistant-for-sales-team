@@ -211,7 +211,13 @@ export default function Home() {
           const response = await fetch(attachment.path);
           const blob = await response.blob();
           const arrayBuffer = await blob.arrayBuffer();
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          // Convert ArrayBuffer to base64 (compatible with TypeScript)
+          const uint8Array = new Uint8Array(arrayBuffer);
+          let binaryString = '';
+          for (let i = 0; i < uint8Array.length; i++) {
+            binaryString += String.fromCharCode(uint8Array[i]);
+          }
+          const base64 = btoa(binaryString);
           
           // Get content type
           const contentType = attachment.mimetype || blob.type || 'application/octet-stream';
