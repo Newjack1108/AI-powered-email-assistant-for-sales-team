@@ -212,13 +212,23 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
     
     // Remove any remaining "Subject:" or "Body:" labels
     body = body.replace(/^(Subject|Body):\s*/gmi, '').trim();
+    
+    // Remove subject lines that appear anywhere in the body (sometimes AI includes them)
+    body = body.replace(/Subject:\s*[^\n]+\n/gi, '');
+    body = body.replace(/\nSubject:\s*[^\n]+/gi, '');
+    body = body.replace(/Subject:\s*[^\n]+$/gi, '');
 
     // Remove any signature-like text that the AI might have generated
     // Look for patterns like "[Your Name]", "Warm regards, [Name]", company contact info, etc.
     body = body.replace(/\n\s*\[Your Name\].*$/gmi, '');
     body = body.replace(/\n\s*\[Name\].*$/gmi, '');
     body = body.replace(/\n\s*Cheshire Stables.*CSGB Group.*$/gmi, '');
+    body = body.replace(/\n\s*Cheshire Sheds.*$/gmi, ''); // Remove "Cheshire Sheds" at end
     body = body.replace(/\n\s*---.*$/gmi, ''); // Remove separator lines
+    
+    // Remove company names after closings (e.g., "Warm regards, Cheshire Sheds" or "Warm regards,\nCheshire Sheds")
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n?\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*,\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
     
     // Remove company contact information patterns (address, phone, email at the end)
     // Multi-line pattern: Company name, address lines, Tel/Phone, email
@@ -236,14 +246,17 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
     body = body.replace(/\n\s*CW7\s+\d+[A-Z]{2}[^\n]*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone):\s*\d+.*?\n\s*.*?@.*$/gmi, ''); // Postcode pattern
     
     // Remove any remaining company contact info after "Warm regards," or similar (single line patterns)
-    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables.*$/gmi, '$1,');
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*[A-Z][a-z]+\s+House.*$/gmi, '$1,');
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?(?:Tel|Phone):\s*\d+.*$/gmi, '$1,');
     body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?@.*$/gmi, '$1,');
     
+    // Remove company names that appear directly after closings (e.g., "Warm regards, Cheshire Sheds")
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*,\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
+    
     // Remove multi-line company contact blocks that appear after a closing
     // Pattern: Closing, then company name, then address/contact info
-    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone|Ibex|Nat Lane|Winsford|CW7|sales@).*$/gmi, '$1,');
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings)\s*\n(?:\s*[^\n]+\n)*\s*(?:Tel|Phone|Ibex|Nat Lane|Winsford|CW7|sales@).*$/gmi, '$1,');
     
     body = body.trim();
 
