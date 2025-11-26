@@ -12,17 +12,20 @@ export default async function handler(
 
   try {
     await initDb();
+    console.log('✅ Database initialized');
   } catch (error: any) {
-    console.error('Database initialization error:', error);
+    console.error('❌ Database initialization error:', error);
+    return res.status(500).json({ error: 'Database initialization failed', details: error.message });
   }
 
   // Initialize admin from environment variables if needed (only on first request)
   try {
     const { initAdminFromEnv } = await import('@/lib/init-admin');
     await initAdminFromEnv();
+    console.log('✅ Admin initialization check completed');
   } catch (error: any) {
-    // Silently fail - admin init is optional
-    console.log('Admin initialization skipped:', error.message);
+    // Log but don't fail - admin init is optional
+    console.log('⚠️ Admin initialization skipped:', error.message);
   }
 
   try {
@@ -32,15 +35,24 @@ export default async function handler(
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
+    console.log(`🔐 Attempting login for email: ${email}`);
+    
     const user = await getUserByEmail(email);
     if (!user) {
+      console.log(`❌ User not found: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    console.log(`✅ User found: ${user.email}, role: ${user.role}`);
+    console.log(`🔑 Verifying password...`);
+
     const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
+      console.log(`❌ Invalid password for user: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
+
+    console.log(`✅ Password verified for user: ${email}`);
 
     const token = generateToken({
       id: user.id,
@@ -55,6 +67,7 @@ export default async function handler(
     });
 
     setAuthCookie(res, token);
+    console.log(`✅ Login successful for user: ${email}`);
 
     return res.status(200).json({
       success: true,
@@ -71,8 +84,11 @@ export default async function handler(
       },
     });
   } catch (error: any) {
-    console.error('Login error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ Login error:', error);
+    console.error('   Error type:', error?.constructor?.name);
+    console.error('   Error message:', error?.message);
+    console.error('   Error stack:', error?.stack);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 }
 
