@@ -60,6 +60,17 @@ export interface User {
   signature_phone?: string;
   signature_email?: string;
   signature_company?: string;
+  // Email configuration fields
+  email_provider?: 'oauth' | 'smtp' | null;
+  email_oauth_access_token?: string | null;
+  email_oauth_refresh_token?: string | null;
+  email_oauth_expires_at?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_user?: string | null;
+  email_smtp_password?: string | null;
+  email_from_name?: string | null;
+  email_configured_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -200,10 +211,59 @@ if (process.env.DATABASE_URL) {
         signature_phone TEXT,
         signature_email TEXT,
         signature_company TEXT,
+        email_provider TEXT,
+        email_oauth_access_token TEXT,
+        email_oauth_refresh_token TEXT,
+        email_oauth_expires_at DATETIME,
+        email_smtp_host TEXT,
+        email_smtp_port INTEGER,
+        email_smtp_user TEXT,
+        email_smtp_password TEXT,
+        email_from_name TEXT,
+        email_configured_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add email configuration columns if they don't exist (for existing databases)
+    try {
+      const tableInfo = await dbAll(`PRAGMA table_info(users)`);
+      const columns = Array.isArray(tableInfo) ? (tableInfo as any[]).map((col: any) => col.name) : [];
+      
+      if (!columns.includes('email_provider')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_provider TEXT`);
+      }
+      if (!columns.includes('email_oauth_access_token')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_oauth_access_token TEXT`);
+      }
+      if (!columns.includes('email_oauth_refresh_token')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_oauth_refresh_token TEXT`);
+      }
+      if (!columns.includes('email_oauth_expires_at')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_oauth_expires_at DATETIME`);
+      }
+      if (!columns.includes('email_smtp_host')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_smtp_host TEXT`);
+      }
+      if (!columns.includes('email_smtp_port')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_smtp_port INTEGER`);
+      }
+      if (!columns.includes('email_smtp_user')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_smtp_user TEXT`);
+      }
+      if (!columns.includes('email_smtp_password')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_smtp_password TEXT`);
+      }
+      if (!columns.includes('email_from_name')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_from_name TEXT`);
+      }
+      if (!columns.includes('email_configured_at')) {
+        await dbRun(`ALTER TABLE users ADD COLUMN email_configured_at DATETIME`);
+      }
+    } catch (error: any) {
+      // Ignore errors - columns may already exist
+    }
 
     // Create special_offers table
     await dbRun(`
@@ -337,8 +397,8 @@ if (process.env.DATABASE_URL) {
 
   const createUser = async (user: Omit<User, 'created_at' | 'updated_at'>) => {
     await dbRun(
-      `INSERT INTO users (id, email, password_hash, name, role, signature_name, signature_title, signature_phone, signature_email, signature_company, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      `INSERT INTO users (id, email, password_hash, name, role, signature_name, signature_title, signature_phone, signature_email, signature_company, email_provider, email_oauth_access_token, email_oauth_refresh_token, email_oauth_expires_at, email_smtp_host, email_smtp_port, email_smtp_user, email_smtp_password, email_from_name, email_configured_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         user.id,
         user.email,
@@ -350,6 +410,16 @@ if (process.env.DATABASE_URL) {
         user.signature_phone || null,
         user.signature_email || null,
         user.signature_company || null,
+        user.email_provider || null,
+        user.email_oauth_access_token || null,
+        user.email_oauth_refresh_token || null,
+        user.email_oauth_expires_at || null,
+        user.email_smtp_host || null,
+        user.email_smtp_port || null,
+        user.email_smtp_user || null,
+        user.email_smtp_password || null,
+        user.email_from_name || null,
+        user.email_configured_at || null,
       ]
     );
   };
@@ -385,6 +455,46 @@ if (process.env.DATABASE_URL) {
     if (updates.signature_company !== undefined) {
       fields.push('signature_company = ?');
       values.push(updates.signature_company);
+    }
+    if (updates.email_provider !== undefined) {
+      fields.push('email_provider = ?');
+      values.push(updates.email_provider);
+    }
+    if (updates.email_oauth_access_token !== undefined) {
+      fields.push('email_oauth_access_token = ?');
+      values.push(updates.email_oauth_access_token);
+    }
+    if (updates.email_oauth_refresh_token !== undefined) {
+      fields.push('email_oauth_refresh_token = ?');
+      values.push(updates.email_oauth_refresh_token);
+    }
+    if (updates.email_oauth_expires_at !== undefined) {
+      fields.push('email_oauth_expires_at = ?');
+      values.push(updates.email_oauth_expires_at);
+    }
+    if (updates.email_smtp_host !== undefined) {
+      fields.push('email_smtp_host = ?');
+      values.push(updates.email_smtp_host);
+    }
+    if (updates.email_smtp_port !== undefined) {
+      fields.push('email_smtp_port = ?');
+      values.push(updates.email_smtp_port);
+    }
+    if (updates.email_smtp_user !== undefined) {
+      fields.push('email_smtp_user = ?');
+      values.push(updates.email_smtp_user);
+    }
+    if (updates.email_smtp_password !== undefined) {
+      fields.push('email_smtp_password = ?');
+      values.push(updates.email_smtp_password);
+    }
+    if (updates.email_from_name !== undefined) {
+      fields.push('email_from_name = ?');
+      values.push(updates.email_from_name);
+    }
+    if (updates.email_configured_at !== undefined) {
+      fields.push('email_configured_at = ?');
+      values.push(updates.email_configured_at);
     }
 
     if (fields.length === 0) return;

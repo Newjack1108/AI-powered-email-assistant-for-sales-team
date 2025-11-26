@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import { useAuth } from '@/lib/useAuth';
 
 interface Template {
   id: string;
@@ -19,6 +20,7 @@ interface Attachment {
 }
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth(); // Use auth hook
   const [formData, setFormData] = useState({
     recipientName: '',
     recipientEmail: '',
@@ -273,6 +275,26 @@ export default function Home() {
     if (!generatedEmail) {
       setMessage({ type: 'error', text: 'Please generate an email first' });
       return;
+    }
+
+    // Check if user has email configured
+    try {
+      const userRes = await fetch('/api/auth/me');
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        const user = userData.user;
+        
+        if (!user.email_provider) {
+          setMessage({ 
+            type: 'error', 
+            text: 'Email not configured. Please configure your email in Profile settings before sending emails.' 
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user email configuration:', error);
+      // Continue anyway - let the API handle the error
     }
 
     setSending(true);

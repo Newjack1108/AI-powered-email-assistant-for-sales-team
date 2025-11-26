@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { sendEmail, sendToMakeWebhook } from '@/lib/email';
+import { sendEmailForUser, sendToMakeWebhook } from '@/lib/email';
 import { saveEmail, updateEmailStatus, initDb } from '@/lib/db';
+import { getAuthTokenFromRequest, verifyToken } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 
@@ -70,6 +71,17 @@ export default async function handler(
     // If sending now, actually send the email
     if (sendNow) {
       try {
+        // Get current user for email configuration
+        const token = getAuthTokenFromRequest(req);
+        if (!token) {
+          return res.status(401).json({ error: 'Authentication required to send emails' });
+        }
+
+        const authUser = verifyToken(token);
+        if (!authUser) {
+          return res.status(401).json({ error: 'Invalid authentication token' });
+        }
+
         // Convert attachment paths to nodemailer format if needed
         const emailAttachments = attachments?.map((att: any) => {
           // Handle both relative paths (from uploads) and absolute paths
@@ -83,7 +95,8 @@ export default async function handler(
           };
         }) || [];
 
-        await sendEmail({
+        // Send email using user's configuration
+        await sendEmailForUser(authUser.id, {
           to: recipientEmail,
           subject,
           body,

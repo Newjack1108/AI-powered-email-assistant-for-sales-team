@@ -49,6 +49,17 @@ export interface User {
   signature_phone?: string;
   signature_email?: string;
   signature_company?: string;
+  // Email configuration fields
+  email_provider?: 'oauth' | 'smtp' | null;
+  email_oauth_access_token?: string | null;
+  email_oauth_refresh_token?: string | null;
+  email_oauth_expires_at?: string | null;
+  email_smtp_host?: string | null;
+  email_smtp_port?: number | null;
+  email_smtp_user?: string | null;
+  email_smtp_password?: string | null;
+  email_from_name?: string | null;
+  email_configured_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -121,10 +132,62 @@ export async function initDb() {
       signature_phone TEXT,
       signature_email TEXT,
       signature_company TEXT,
+      email_provider TEXT,
+      email_oauth_access_token TEXT,
+      email_oauth_refresh_token TEXT,
+      email_oauth_expires_at TIMESTAMP,
+      email_smtp_host TEXT,
+      email_smtp_port INTEGER,
+      email_smtp_user TEXT,
+      email_smtp_password TEXT,
+      email_from_name TEXT,
+      email_configured_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add email configuration columns if they don't exist (for existing databases)
+  try {
+    await pool.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_provider') THEN
+          ALTER TABLE users ADD COLUMN email_provider TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_oauth_access_token') THEN
+          ALTER TABLE users ADD COLUMN email_oauth_access_token TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_oauth_refresh_token') THEN
+          ALTER TABLE users ADD COLUMN email_oauth_refresh_token TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_oauth_expires_at') THEN
+          ALTER TABLE users ADD COLUMN email_oauth_expires_at TIMESTAMP;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_smtp_host') THEN
+          ALTER TABLE users ADD COLUMN email_smtp_host TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_smtp_port') THEN
+          ALTER TABLE users ADD COLUMN email_smtp_port INTEGER;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_smtp_user') THEN
+          ALTER TABLE users ADD COLUMN email_smtp_user TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_smtp_password') THEN
+          ALTER TABLE users ADD COLUMN email_smtp_password TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_from_name') THEN
+          ALTER TABLE users ADD COLUMN email_from_name TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email_configured_at') THEN
+          ALTER TABLE users ADD COLUMN email_configured_at TIMESTAMP;
+        END IF;
+      END $$;
+    `);
+  } catch (error: any) {
+    // Ignore errors - columns may already exist
+    console.log('Note: Some email configuration columns may already exist');
+  }
 
   // Create special_offers table
   await pool.query(`
@@ -297,8 +360,8 @@ export async function getUserById(id: string): Promise<User | undefined> {
 
 export async function createUser(user: Omit<User, 'created_at' | 'updated_at'>) {
   await pool.query(
-    `INSERT INTO users (id, email, password_hash, name, role, signature_name, signature_title, signature_phone, signature_email, signature_company, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
+    `INSERT INTO users (id, email, password_hash, name, role, signature_name, signature_title, signature_phone, signature_email, signature_company, email_provider, email_oauth_access_token, email_oauth_refresh_token, email_oauth_expires_at, email_smtp_host, email_smtp_port, email_smtp_user, email_smtp_password, email_from_name, email_configured_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, CURRENT_TIMESTAMP)`,
     [
       user.id,
       user.email,
@@ -310,6 +373,16 @@ export async function createUser(user: Omit<User, 'created_at' | 'updated_at'>) 
       user.signature_phone || null,
       user.signature_email || null,
       user.signature_company || null,
+      user.email_provider || null,
+      user.email_oauth_access_token || null,
+      user.email_oauth_refresh_token || null,
+      user.email_oauth_expires_at || null,
+      user.email_smtp_host || null,
+      user.email_smtp_port || null,
+      user.email_smtp_user || null,
+      user.email_smtp_password || null,
+      user.email_from_name || null,
+      user.email_configured_at || null,
     ]
   );
 }
@@ -346,6 +419,46 @@ export async function updateUser(id: string, updates: Partial<Omit<User, 'id' | 
   if (updates.signature_company !== undefined) {
     fields.push(`signature_company = $${paramCount++}`);
     values.push(updates.signature_company);
+  }
+  if (updates.email_provider !== undefined) {
+    fields.push(`email_provider = $${paramCount++}`);
+    values.push(updates.email_provider);
+  }
+  if (updates.email_oauth_access_token !== undefined) {
+    fields.push(`email_oauth_access_token = $${paramCount++}`);
+    values.push(updates.email_oauth_access_token);
+  }
+  if (updates.email_oauth_refresh_token !== undefined) {
+    fields.push(`email_oauth_refresh_token = $${paramCount++}`);
+    values.push(updates.email_oauth_refresh_token);
+  }
+  if (updates.email_oauth_expires_at !== undefined) {
+    fields.push(`email_oauth_expires_at = $${paramCount++}`);
+    values.push(updates.email_oauth_expires_at);
+  }
+  if (updates.email_smtp_host !== undefined) {
+    fields.push(`email_smtp_host = $${paramCount++}`);
+    values.push(updates.email_smtp_host);
+  }
+  if (updates.email_smtp_port !== undefined) {
+    fields.push(`email_smtp_port = $${paramCount++}`);
+    values.push(updates.email_smtp_port);
+  }
+  if (updates.email_smtp_user !== undefined) {
+    fields.push(`email_smtp_user = $${paramCount++}`);
+    values.push(updates.email_smtp_user);
+  }
+  if (updates.email_smtp_password !== undefined) {
+    fields.push(`email_smtp_password = $${paramCount++}`);
+    values.push(updates.email_smtp_password);
+  }
+  if (updates.email_from_name !== undefined) {
+    fields.push(`email_from_name = $${paramCount++}`);
+    values.push(updates.email_from_name);
+  }
+  if (updates.email_configured_at !== undefined) {
+    fields.push(`email_configured_at = $${paramCount++}`);
+    values.push(updates.email_configured_at);
   }
 
   if (fields.length === 0) return;
