@@ -493,12 +493,22 @@ Subject: [shortened subject]
     
     // Remove any remaining "Subject:" or "Body:" labels
     shortenedBody = shortenedBody.replace(/^(Subject|Body):\s*/gmi, '').trim();
+    
+    // Remove subject lines that appear anywhere in the body
+    shortenedBody = shortenedBody.replace(/Subject:\s*[^\n]+\n/gi, '');
+    shortenedBody = shortenedBody.replace(/\nSubject:\s*[^\n]+/gi, '');
+    shortenedBody = shortenedBody.replace(/Subject:\s*[^\n]+$/gi, '');
 
     // Remove any signature-like text that might have been generated during shortening
     shortenedBody = shortenedBody.replace(/\n\s*\[Your Name\].*$/gmi, '');
     shortenedBody = shortenedBody.replace(/\n\s*\[Name\].*$/gmi, '');
     shortenedBody = shortenedBody.replace(/\n\s*Cheshire Stables.*CSGB Group.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Cheshire Sheds.*$/gmi, ''); // Remove "Cheshire Sheds" at end
     shortenedBody = shortenedBody.replace(/\n\s*---.*$/gmi, '');
+    
+    // Remove company names after closings (e.g., "Warm regards, Cheshire Sheds" or "Warm regards,\nCheshire Sheds")
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n?\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*,\s*Cheshire (Stables|Sheds|Sheds and Garden Buildings).*$/gmi, '$1,');
     
     // Remove company contact information patterns (address, phone, email at the end)
     // Multi-line pattern: Company name, address lines, Tel/Phone, email
