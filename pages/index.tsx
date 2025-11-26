@@ -269,8 +269,9 @@ export default function Home() {
   };
 
   const handleGenerateEmail = async () => {
-    if (!formData.recipientEmail) {
-      setMessage({ type: 'error', text: 'Recipient email is required' });
+    // If no received email is pasted, recipient email is required
+    if (!formData.receivedEmail && !formData.recipientEmail) {
+      setMessage({ type: 'error', text: 'Recipient email is required, or paste a received email to reply to' });
       return;
     }
 
@@ -508,9 +509,28 @@ export default function Home() {
                 value={formData.recipientEmail}
                 onChange={handleInputChange}
                 placeholder="john@example.com"
-                required
+                required={!formData.receivedEmail}
               />
+              <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                Leave blank if pasting a received email below - the AI will extract it
+              </small>
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="receivedEmail">Paste Received Email (Optional)</label>
+            <textarea
+              id="receivedEmail"
+              name="receivedEmail"
+              value={formData.receivedEmail}
+              onChange={handleInputChange}
+              rows={8}
+              placeholder="Paste the received email here to generate a response. The AI will extract the sender's email, name, and context automatically."
+              style={{ fontFamily: 'monospace', fontSize: '0.9em' }}
+            />
+            <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+              Paste the full email (including headers if available). The AI will analyze it and generate an appropriate response.
+            </small>
           </div>
 
           <div className="form-row">
@@ -681,7 +701,7 @@ export default function Home() {
             <button
               className="btn btn-primary"
               onClick={handleGenerateEmail}
-              disabled={loading || !formData.recipientEmail}
+              disabled={loading || (!formData.recipientEmail && !formData.receivedEmail)}
             >
               {loading ? <span className="loading"></span> : null}
               Generate Email
