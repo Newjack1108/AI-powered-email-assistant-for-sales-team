@@ -288,6 +288,16 @@ if (process.env.DATABASE_URL) {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    
+    // Add trading_name column if it doesn't exist (migration for existing tables)
+    try {
+      await dbRun(`ALTER TABLE product_types ADD COLUMN trading_name TEXT`);
+    } catch (error: any) {
+      // Column already exists, ignore error
+      if (!error.message.includes('duplicate column name') && !error.message.includes('already exists')) {
+        console.error('Error adding trading_name column:', error);
+      }
+    }
   };
 
   const saveEmail = async (email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) => {
