@@ -737,6 +737,26 @@ export const getUsers = async (...args: any[]) => {
   return module.getUsers(...args);
 };
 
+export const saveProductType = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.saveProductType(...args);
+};
+
+export const getProductTypes = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getProductTypes(...args);
+};
+
+export const getProductType = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.getProductType(...args);
+};
+
+export const deleteProductType = async (...args: any[]) => {
+  const module = await ensureDbModule();
+  return module.deleteProductType(...args);
+};
+
 export const deleteUser = async (...args: any[]) => {
   const module = await ensureDbModule();
   return module.deleteUser(...args);
