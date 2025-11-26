@@ -107,29 +107,11 @@ export default function SpecialOffers() {
       <Head>
         <title>Special Offers - Sales Email Assistant</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="header">
-        <div className="header-content">
-          <div className="header-logo-container">
-            <img 
-              src="/logo.png" 
-              alt="Company Logo" 
-              className="header-logo"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            <h1>Sales Email Assistant</h1>
-          </div>
-          <nav className="nav-links">
-            <Link href="/">Compose</Link>
-            <Link href="/history">History</Link>
-            <Link href="/templates">Templates</Link>
-            <Link href="/special-offers">Special Offers</Link>
-          </nav>
-        </div>
-      </div>
+      <Header />
 
       <div className="container">
         <div className="card">
