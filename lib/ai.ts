@@ -214,11 +214,28 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
     body = body.replace(/^(Subject|Body):\s*/gmi, '').trim();
 
     // Remove any signature-like text that the AI might have generated
-    // Look for patterns like "[Your Name]", "Warm regards, [Name]", etc.
+    // Look for patterns like "[Your Name]", "Warm regards, [Name]", company contact info, etc.
     body = body.replace(/\n\s*\[Your Name\].*$/gmi, '');
     body = body.replace(/\n\s*\[Name\].*$/gmi, '');
     body = body.replace(/\n\s*Cheshire Stables.*CSGB Group.*$/gmi, '');
     body = body.replace(/\n\s*---.*$/gmi, ''); // Remove separator lines
+    
+    // Remove company contact information patterns (address, phone, email at the end)
+    // Pattern: Company name, address, Tel/Phone, email
+    body = body.replace(/\n\s*Cheshire Stables\s*\n.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, '');
+    body = body.replace(/\n\s*[A-Z][a-z]+\s+House.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, ''); // Address pattern
+    body = body.replace(/\n\s*Ibex House.*?sales@.*$/gmi, ''); // Specific address pattern
+    body = body.replace(/\n\s*Nat Lane.*?sales@.*$/gmi, ''); // Address continuation
+    body = body.replace(/\n\s*Winsford.*?sales@.*$/gmi, ''); // City pattern
+    body = body.replace(/\n\s*Cheshire.*?sales@.*$/gmi, ''); // County pattern
+    body = body.replace(/\n\s*CW7\s+\d+[A-Z]{2}.*?sales@.*$/gmi, ''); // Postcode pattern
+    
+    // Remove any remaining company contact info after "Warm regards," or similar
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables.*$/gmi, '$1,');
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*[A-Z][a-z]+\s+House.*$/gmi, '$1,');
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?(?:Tel|Phone):\s*\d+.*$/gmi, '$1,');
+    body = body.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?@.*$/gmi, '$1,');
+    
     body = body.trim();
 
     // Ensure the email ends with a proper closing (if it doesn't already)
