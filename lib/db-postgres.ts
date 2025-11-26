@@ -206,11 +206,27 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS product_types (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      trading_name TEXT,
       description TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  
+  // Add trading_name column if it doesn't exist (migration for existing tables)
+  try {
+    await pool.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='product_types' AND column_name='trading_name') THEN
+          ALTER TABLE product_types ADD COLUMN trading_name TEXT;
+        END IF;
+      END $$;
+    `);
+  } catch (error: any) {
+    // Column already exists or other error, log but don't fail
+    console.error('Error adding trading_name column to product_types:', error);
+  }
 }
 
 export async function saveEmail(email: Omit<EmailRecord, 'created_at' | 'sent_at'> & { sent_at?: string }) {
