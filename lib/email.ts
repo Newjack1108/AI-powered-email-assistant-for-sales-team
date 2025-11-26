@@ -203,7 +203,26 @@ async function sendEmailWithSMTP(
     });
   } catch (error: any) {
     console.error('Error sending email via SMTP:', error);
-    throw new Error(`Failed to send email: ${error.message}. Please check your SMTP settings and try again.`);
+    
+    // Provide more specific error messages
+    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED' || error.code === 'EHOSTUNREACH') {
+      throw new Error(
+        `SMTP connection failed: ${error.message}. ` +
+        `This could be due to:\n` +
+        `1. Railway network restrictions blocking SMTP (port 587/465)\n` +
+        `2. Incorrect SMTP host or port\n` +
+        `3. Firewall blocking the connection\n` +
+        `4. SMTP server is down or unreachable\n\n` +
+        `Please verify your SMTP settings in Profile. For Railway deployments, you may need to use an email service like SendGrid or Mailgun instead of direct SMTP.`
+      );
+    } else if (error.code === 'EAUTH') {
+      throw new Error(
+        `SMTP authentication failed: ${error.message}. ` +
+        `Please check your email address and password. If you have 2FA enabled, you need to use an app password instead of your regular password.`
+      );
+    } else {
+      throw new Error(`Failed to send email: ${error.message}. Please check your SMTP settings and try again.`);
+    }
   }
 }
 

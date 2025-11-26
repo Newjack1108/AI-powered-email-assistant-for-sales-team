@@ -115,6 +115,12 @@ export default async function handler(
       } catch (emailError: any) {
         // Update status to failed
         await updateEmailStatus(emailId, 'failed');
+        console.error('Email sending error details:', {
+          message: emailError.message,
+          code: emailError.code,
+          command: emailError.command,
+          stack: emailError.stack,
+        });
         throw emailError;
       }
     }
