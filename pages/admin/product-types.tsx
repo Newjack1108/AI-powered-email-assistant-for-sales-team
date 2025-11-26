@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import { useAuth } from '@/lib/useAuth';
+import { useRouter } from 'next/router';
 
 interface ProductType {
   id: string;
@@ -12,7 +13,7 @@ interface ProductType {
 }
 
 export default function ProductTypes() {
-  const { user, loading: authLoading } = useAuth(true, 'admin'); // Require admin role
+  const { user, loading: authLoading } = useAuth(true); // Require authentication
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -131,13 +132,33 @@ export default function ProductTypes() {
     }
   };
 
-  if (authLoading || (user && user.role !== 'admin')) {
+  useEffect(() => {
+    if (!authLoading && user && user.role !== 'admin') {
+      // Redirect non-admin users
+      window.location.href = '/';
+    }
+  }, [user, authLoading]);
+
+  if (authLoading) {
     return (
       <>
         <Header />
         <div className="container">
           <div className="card">
-            {authLoading ? <p>Loading authentication...</p> : <p>Access Denied: You must be an admin to view this page.</p>}
+            <p>Loading authentication...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (user && user.role !== 'admin') {
+    return (
+      <>
+        <Header />
+        <div className="container">
+          <div className="card">
+            <p>Access Denied: You must be an admin to view this page.</p>
           </div>
         </div>
       </>
