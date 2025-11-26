@@ -292,6 +292,7 @@ export default function Home() {
             additionalContext: '',
             postcode: '',
             templateId: '',
+            mood: 'professional',
           });
           setGeneratedEmail(null);
           setAttachments([]);
