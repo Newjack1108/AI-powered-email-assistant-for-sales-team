@@ -11,6 +11,7 @@ interface User {
   signature_phone?: string;
   signature_email?: string;
   signature_company?: string;
+  email_provider?: 'oauth' | 'smtp' | null;
 }
 
 export function useAuth(requireAuth: boolean = false) {

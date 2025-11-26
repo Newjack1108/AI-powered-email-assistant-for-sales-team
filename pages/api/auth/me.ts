@@ -44,6 +44,7 @@ export default async function handler(
         signature_phone: fullUser.signature_phone,
         signature_email: fullUser.signature_email,
         signature_company: fullUser.signature_company,
+        email_provider: fullUser.email_provider,
       },
     });
   } catch (error: any) {

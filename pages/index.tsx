@@ -622,6 +622,11 @@ export default function Home() {
                 >
                   Save as Draft
                 </button>
+                {user && !user.email_provider && (
+                  <div style={{ marginTop: '12px', padding: '12px', background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', fontSize: '0.9em', width: '100%' }}>
+                    ⚠️ <strong>Email not configured.</strong> Please configure your email in <Link href="/profile">Profile settings</Link> to send emails.
+                  </div>
+                )}
                 <button
                   className="btn btn-outline"
                   onClick={async () => {
