@@ -31,6 +31,7 @@ export default function Home() {
     additionalContext: '',
     postcode: '',
     templateId: '',
+    mood: 'professional',
   });
 
   const [templates, setTemplates] = useState<Template[]>([]);

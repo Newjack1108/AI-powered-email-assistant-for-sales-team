@@ -24,6 +24,7 @@ export interface EmailFormData {
   template?: string;
   useTemplateDirectly?: boolean;
   postcode?: string;
+  mood?: string;
   userSignature?: {
     name?: string;
     title?: string;
@@ -78,7 +79,7 @@ function buildAssistantInstructions(): string {
 Your role is to write clear, professional, and engaging sales emails that are personalized and effective.
 
 Key Guidelines:
-- Always maintain a professional yet friendly tone
+- Always maintain an appropriate tone based on the specified mood/tone
 - Personalize emails based on the customer's information
 - Address the specific context and requirements provided
 - Include a clear call-to-action
@@ -96,6 +97,14 @@ Product Types:
 - Garden Offices
 - Barns
 
+Tone/Mood Guidelines:
+- Professional: Formal, business-like, polished, respectful
+- Friendly: Warm, approachable, conversational, personable
+- Casual: Relaxed, informal, easy-going, laid-back
+- Urgent: Time-sensitive, action-oriented, compelling, immediate
+- Enthusiastic: Energetic, positive, excited, optimistic
+- Empathetic: Understanding, supportive, caring, compassionate
+
 When writing emails:
 1. Always start with a personalized greeting using the customer's name if provided
 2. Reference how they found us (lead source) when relevant
@@ -104,13 +113,14 @@ When writing emails:
 5. Include qualification questions if needed
 6. Mention special offers and lead times when provided
 7. End with a clear call-to-action and contact information
+8. Match the specified mood/tone throughout the entire email
 
 Format your response as:
 Subject: [email subject]
 
 [email body]
 
-The email should be professional, engaging, and tailored to the specific customer's needs and situation.`;
+The email should match the specified mood/tone, be engaging, and tailored to the specific customer's needs and situation.`;
 }
 
 export async function generateEmail(formData: EmailFormData): Promise<{ subject: string; body: string }> {
