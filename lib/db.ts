@@ -81,6 +81,8 @@ if (process.env.DATABASE_URL) {
       createUser: postgresModule.createUser,
       updateUser: postgresModule.updateUser,
       updateUserPassword: postgresModule.updateUserPassword,
+      getUsers: postgresModule.getUsers,
+      deleteUser: postgresModule.deleteUser,
       saveSpecialOffer: postgresModule.saveSpecialOffer,
       getSpecialOffers: postgresModule.getSpecialOffers,
       getSpecialOffer: postgresModule.getSpecialOffer,
