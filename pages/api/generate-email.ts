@@ -10,6 +10,12 @@ export default async function handler(
   }
 
   try {
+    // DEBUG: Log API key status (without exposing the actual key)
+    const hasApiKey = !!process.env.OPENAI_API_KEY;
+    const apiKeyLength = process.env.OPENAI_API_KEY?.length || 0;
+    const apiKeyPrefix = process.env.OPENAI_API_KEY?.substring(0, 7) || 'none';
+    console.log(`🔑 API Key check: exists=${hasApiKey}, length=${apiKeyLength}, prefix=${apiKeyPrefix}...`);
+    
     // Check for OpenAI API key
     if (!process.env.OPENAI_API_KEY) {
       console.error('OPENAI_API_KEY is not configured');
