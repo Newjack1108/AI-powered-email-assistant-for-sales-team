@@ -118,9 +118,11 @@ When writing emails:
 CRITICAL - SIGNATURE RULES:
 - DO NOT include any signature, name, or contact information in the email body
 - DO NOT include phrases like "[Your Name]", "Warm regards, [Name]", or any placeholder names
-- DO NOT include company names, phone numbers, or email addresses at the end
-- End the email with a professional closing like "Best regards," or "Kind regards," followed by a blank line, but NO name or signature after it
-- The signature will be added automatically by the system, so you must NOT include one
+- DO NOT include company names, addresses, phone numbers, or email addresses at the end
+- DO NOT include company contact details like "Ibex House, Nat Lane, Winsford" or "Tel: 01606 352352" or "sales@cheshiresheds.co.uk"
+- DO NOT include "Cheshire Stables" or any company name after the closing
+- End the email with ONLY a professional closing like "Best regards," or "Kind regards," followed by NOTHING else
+- The signature with all contact information will be added automatically by the system, so you must NOT include any contact details
 
 Format your response as:
 Subject: [email subject]
@@ -458,6 +460,22 @@ Subject: [shortened subject]
     shortenedBody = shortenedBody.replace(/\n\s*\[Name\].*$/gmi, '');
     shortenedBody = shortenedBody.replace(/\n\s*Cheshire Stables.*CSGB Group.*$/gmi, '');
     shortenedBody = shortenedBody.replace(/\n\s*---.*$/gmi, '');
+    
+    // Remove company contact information patterns (address, phone, email at the end)
+    shortenedBody = shortenedBody.replace(/\n\s*Cheshire Stables\s*\n.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*[A-Z][a-z]+\s+House.*?(?:Tel|Phone):\s*\d+.*?\n.*?@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Ibex House.*?sales@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Nat Lane.*?sales@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Winsford.*?sales@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*Cheshire.*?sales@.*$/gmi, '');
+    shortenedBody = shortenedBody.replace(/\n\s*CW7\s+\d+[A-Z]{2}.*?sales@.*$/gmi, '');
+    
+    // Remove any remaining company contact info after "Warm regards," or similar
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*Cheshire Stables.*$/gmi, '$1,');
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*[A-Z][a-z]+\s+House.*$/gmi, '$1,');
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?(?:Tel|Phone):\s*\d+.*$/gmi, '$1,');
+    shortenedBody = shortenedBody.replace(/(Warm regards|Best regards|Kind regards|Regards),?\s*\n\s*.*?@.*$/gmi, '$1,');
+    
     shortenedBody = shortenedBody.trim();
 
     // Preserve the original user signature if it exists (it should be at the very end)
