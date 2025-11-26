@@ -695,14 +695,15 @@ export default function Home() {
               <div className="email-preview-body">{generatedEmail.body}</div>
 
               <div className="actions">
-                <button
+                {/* Temporarily hidden - Send Email Now button */}
+                {/* <button
                   className="btn btn-primary"
                   onClick={() => handleSendEmail(true)}
                   disabled={sending}
                 >
                   {sending ? <span className="loading"></span> : null}
                   Send Email Now
-                </button>
+                </button> */}
                 <button
                   className="btn btn-secondary"
                   onClick={() => handleSendEmail(false)}
