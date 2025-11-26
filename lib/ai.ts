@@ -204,10 +204,26 @@ export async function generateEmail(formData: EmailFormData): Promise<{ subject:
     // Remove any remaining "Subject:" or "Body:" labels
     body = body.replace(/^(Subject|Body):\s*/gmi, '').trim();
 
-    // Append user signature if provided
+    // Remove any signature-like text that the AI might have generated
+    // Look for patterns like "[Your Name]", "Warm regards, [Name]", etc.
+    body = body.replace(/\n\s*\[Your Name\].*$/gmi, '');
+    body = body.replace(/\n\s*\[Name\].*$/gmi, '');
+    body = body.replace(/\n\s*Cheshire Stables.*CSGB Group.*$/gmi, '');
+    body = body.replace(/\n\s*---.*$/gmi, ''); // Remove separator lines
+    body = body.trim();
+
+    // Ensure the email ends with a proper closing (if it doesn't already)
+    const hasClosing = /(Best regards|Kind regards|Warm regards|Regards|Sincerely|Thank you|Thanks),?\s*$/i.test(body);
+    if (!hasClosing && body.length > 0) {
+      // Add a professional closing if missing
+      body += '\n\nBest regards,';
+    }
+
+    // Append user signature if provided (always at the very end)
     if (formData.userSignature) {
       const signature = buildSignature(formData.userSignature);
       if (signature) {
+        // Add signature with proper spacing
         body += '\n\n' + signature;
       }
     }
