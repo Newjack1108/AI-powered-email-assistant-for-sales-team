@@ -416,6 +416,7 @@ export default function Home() {
             postcode: '',
             templateId: '',
             mood: 'professional',
+            receivedEmail: '',
           });
           setGeneratedEmail(null);
           setAttachments([]);
