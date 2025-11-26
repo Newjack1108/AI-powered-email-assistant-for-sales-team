@@ -224,11 +224,15 @@ export default function Home() {
       // For now, we'll let AI enhance it but also support direct template use
       const useTemplateDirectly = selectedTemplate && formData.templateId;
       
+      // Find the selected product type to get trading_name
+      const selectedProductType = productTypes.find(pt => pt.id === formData.productType);
+      
       const res = await fetch('/api/generate-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          productTypeTradingName: selectedProductType?.trading_name, // Pass trading name separately
           template: selectedTemplate?.body,
           useTemplateDirectly: false, // Set to true if you want to use template as-is with just placeholder replacement
         }),

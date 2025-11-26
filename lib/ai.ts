@@ -299,7 +299,14 @@ function buildPrompt(formData: EmailFormData): string {
   }
 
   if (formData.productType) {
-    prompt += `Product Type Customer is Interested In: ${formData.productType}\n`;
+    let productTypeInfo = formData.productType;
+    if (formData.productTypeTradingName) {
+      productTypeInfo += ` (Trading Name: ${formData.productTypeTradingName})`;
+    }
+    prompt += `Product Type Customer is Interested In: ${productTypeInfo}\n`;
+    if (formData.productTypeTradingName) {
+      prompt += `IMPORTANT: When referring to this product type in the email, use the trading name "${formData.productTypeTradingName}" instead of "${formData.productType}". This is the brand/trading name customers will recognize.\n`;
+    }
   }
 
   if (formData.urgency) {
