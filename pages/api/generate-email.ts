@@ -35,11 +35,14 @@ export default async function handler(
 
     return res.status(200).json({ subject, body });
   } catch (error: any) {
-    console.error('Error generating email:', error);
+    console.error('❌ Error generating email:', error);
+    console.error('   Error type:', error?.constructor?.name);
+    console.error('   Error message:', error?.message);
+    console.error('   Error stack:', error?.stack);
     
     // Provide more specific error messages
     let errorMessage = 'Failed to generate email';
-    if (error.message?.includes('API key')) {
+    if (error.message?.includes('API key') || error.message?.includes('authentication')) {
       errorMessage = 'OpenAI API key is invalid or missing';
     } else if (error.message?.includes('rate limit')) {
       errorMessage = 'OpenAI API rate limit exceeded';
@@ -49,7 +52,8 @@ export default async function handler(
     
     return res.status(500).json({ 
       error: errorMessage,
-      message: error.message || 'Unknown error occurred'
+      message: error.message || 'Unknown error occurred',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
