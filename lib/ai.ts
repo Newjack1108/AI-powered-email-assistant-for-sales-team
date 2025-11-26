@@ -331,3 +331,108 @@ function buildSignature(signature: { name?: string; title?: string; phone?: stri
 
   return sig.trim();
 }
+
+export async function shortenEmail(subject: string, body: string): Promise<{ subject: string; body: string }> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
+  try {
+    // Get or create assistant
+    const assistantId = await getOrCreateAssistant();
+    
+    if (!assistantId) {
+      throw new Error('Failed to get or create assistant');
+    }
+
+    console.log(`✂️ Shortening email using assistant ID: ${assistantId}`);
+
+    // Create a thread
+    const thread = await openai.beta.threads.create();
+
+    // Build the shortening prompt
+    const prompt = `Please condense the following email to be more concise while keeping ALL essential information:
+
+Subject: ${subject}
+
+Body:
+${body}
+
+Requirements:
+- Keep all key information (recipient name, product details, special offers, lead times, contact info)
+- Maintain the professional tone and style
+- Preserve the call-to-action
+- Make it shorter and more concise without losing important details
+- Keep the email signature if present
+
+Format your response as:
+Subject: [shortened subject]
+
+[shortened email body]`;
+
+    // Add the user message to the thread
+    await openai.beta.threads.messages.create(thread.id, {
+      role: 'user',
+      content: prompt,
+    });
+
+    // Run the assistant
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: assistantId,
+    });
+    
+    console.log(`📧 Shortening run started with ID: ${run.id}`);
+
+    // Wait for the run to complete
+    let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+    
+    // Poll until the run is complete (with timeout)
+    const maxWaitTime = 60000; // 60 seconds
+    const startTime = Date.now();
+    
+    while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
+      if (Date.now() - startTime > maxWaitTime) {
+        throw new Error('Assistant run timed out');
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+    }
+
+    if (runStatus.status === 'failed') {
+      throw new Error(`Assistant run failed: ${runStatus.last_error?.message || 'Unknown error'}`);
+    }
+
+    if (runStatus.status !== 'completed') {
+      throw new Error(`Assistant run ended with status: ${runStatus.status}`);
+    }
+
+    // Get the messages from the thread
+    const messages = await openai.beta.threads.messages.list(thread.id);
+    const assistantMessage = messages.data.find(msg => msg.role === 'assistant');
+    
+    if (!assistantMessage || !assistantMessage.content[0] || assistantMessage.content[0].type !== 'text') {
+      throw new Error('No response from assistant');
+    }
+
+    const response = assistantMessage.content[0].text.value;
+
+    // Parse subject and body from response
+    const subjectMatch = response.match(/Subject:\s*(.+?)(?:\n|$)/i);
+    const shortenedSubject = subjectMatch ? subjectMatch[1].trim() : subject;
+    
+    // Extract body (everything after Subject line or the entire response)
+    let shortenedBody = response;
+    if (subjectMatch) {
+      shortenedBody = response.substring(response.indexOf('\n') + 1).trim();
+    }
+    
+    // Remove any remaining "Subject:" or "Body:" labels
+    shortenedBody = shortenedBody.replace(/^(Subject|Body):\s*/gmi, '').trim();
+
+    return { subject: shortenedSubject, body: shortenedBody };
+  } catch (error: any) {
+    console.error('Error shortening email with assistant:', error);
+    throw error;
+  }
+}

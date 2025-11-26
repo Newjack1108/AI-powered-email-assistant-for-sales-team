@@ -39,6 +39,7 @@ export default function Home() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [generatedEmail, setGeneratedEmail] = useState<{ subject: string; body: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shortening, setShortening] = useState(false);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -616,6 +617,45 @@ export default function Home() {
                   onClick={() => setGeneratedEmail(null)}
                 >
                   Regenerate
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={async () => {
+                    if (!generatedEmail) return;
+                    
+                    setShortening(true);
+                    setMessage(null);
+                    
+                    try {
+                      const res = await fetch('/api/shorten-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          subject: generatedEmail.subject,
+                          body: generatedEmail.body,
+                        }),
+                      });
+
+                      const data = await res.json();
+
+                      if (res.ok) {
+                        setGeneratedEmail(data);
+                        setMessage({ type: 'success', text: 'Email shortened successfully!' });
+                      } else {
+                        setMessage({ type: 'error', text: data.error || 'Failed to shorten email' });
+                      }
+                    } catch (error: any) {
+                      console.error('Error shortening email:', error);
+                      setMessage({ type: 'error', text: 'Failed to shorten email' });
+                    } finally {
+                      setShortening(false);
+                    }
+                  }}
+                  disabled={shortening || !generatedEmail}
+                  style={{ marginLeft: '8px' }}
+                >
+                  {shortening ? <span className="loading"></span> : null}
+                  {shortening ? 'Shortening...' : 'Shorten Email'}
                 </button>
               </div>
             </div>
