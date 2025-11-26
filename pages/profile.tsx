@@ -305,71 +305,35 @@ export default function Profile() {
           <div style={{ marginTop: '40px', paddingTop: '40px', borderTop: '1px solid #eee' }}>
             <h3 style={{ marginBottom: '16px' }}>Email Configuration</h3>
             <p style={{ color: '#666', marginBottom: '24px', fontSize: '0.9em' }}>
-              Configure your email account to send emails. You can use Microsoft OAuth (recommended) or SMTP.
+              Configure your email account to send emails. Use SMTP settings for your Outlook/Office365 account.
             </p>
 
-            {/* OAuth Status */}
-            <div style={{ marginBottom: '24px', padding: '16px', background: '#f8f9fa', borderRadius: '6px' }}>
-              <h4 style={{ marginTop: 0, marginBottom: '12px' }}>Microsoft Account (OAuth)</h4>
-              {checkingOAuth ? (
-                <p>Checking connection status...</p>
-              ) : oauthStatus?.connected ? (
-                <div>
-                  <p style={{ color: '#28a745', marginBottom: '8px' }}>
-                    ✓ Connected to Microsoft Account
+            {/* SMTP Configuration - Primary Method */}
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ marginBottom: '12px' }}>SMTP Configuration</h4>
+              <p style={{ color: '#666', fontSize: '0.9em', marginBottom: '16px' }}>
+                Configure your Outlook/Office365 SMTP settings. Use your email address and password (or app password if you have 2FA enabled).
+              </p>
+              
+              {user && (user as any).email_provider === 'smtp' && (
+                <div style={{ marginBottom: '16px', padding: '12px', background: '#d4edda', border: '1px solid #28a745', borderRadius: '6px' }}>
+                  <p style={{ color: '#155724', margin: 0 }}>
+                    ✓ Email configured via SMTP
+                    {(user as any).email_smtp_user && (
+                      <span style={{ display: 'block', marginTop: '4px', fontSize: '0.9em' }}>
+                        Using: {(user as any).email_smtp_user}
+                      </span>
+                    )}
                   </p>
-                  {oauthStatus.email && (
-                    <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '8px' }}>
-                      Email: {oauthStatus.email}
-                    </p>
-                  )}
-                  <button
-                    className="btn btn-danger btn-small"
-                    onClick={async () => {
-                      if (!confirm('Are you sure you want to disconnect your Microsoft account?')) return;
-                      try {
-                        const res = await fetch('/api/auth/microsoft/disconnect', { method: 'POST' });
-                        if (res.ok) {
-                          setMessage({ type: 'success', text: 'Microsoft account disconnected' });
-                          checkOAuthStatus();
-                          window.location.reload();
-                        } else {
-                          setMessage({ type: 'error', text: 'Failed to disconnect' });
-                        }
-                      } catch (error) {
-                        setMessage({ type: 'error', text: 'Failed to disconnect' });
-                      }
-                    }}
-                  >
-                    Disconnect Microsoft Account
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <p style={{ color: '#dc3545', marginBottom: '12px' }}>
-                    Not connected to Microsoft Account
-                  </p>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => {
-                      window.location.href = '/api/auth/microsoft/authorize';
-                    }}
-                  >
-                    Connect Microsoft Account
-                  </button>
                 </div>
               )}
-            </div>
 
-            {/* SMTP Configuration */}
-            <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ marginBottom: '12px' }}>SMTP Configuration (Alternative)</h4>
               <button
-                className="btn btn-secondary"
+                className="btn btn-primary"
                 onClick={() => setShowSMTPForm(!showSMTPForm)}
                 style={{ marginBottom: '20px' }}
               >
-                {showSMTPForm ? 'Hide SMTP Settings' : 'Configure SMTP'}
+                {showSMTPForm ? 'Hide SMTP Settings' : (user && (user as any).email_provider === 'smtp' ? 'Update SMTP Settings' : 'Configure SMTP')}
               </button>
 
               {showSMTPForm && (
@@ -405,57 +369,70 @@ export default function Profile() {
                     setSavingEmailConfig(false);
                   }
                 }} style={{ padding: '20px', background: '#f8f9fa', borderRadius: '6px' }}>
-                  <div className="form-group">
-                    <label htmlFor="email_smtp_host">SMTP Host *</label>
-                    <input
-                      type="text"
-                      id="email_smtp_host"
-                      name="email_smtp_host"
-                      value={emailConfig.email_smtp_host}
-                      onChange={handleEmailConfigChange}
-                      required
-                      placeholder="smtp.office365.com"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="email_smtp_port">SMTP Port *</label>
-                    <input
-                      type="number"
-                      id="email_smtp_port"
-                      name="email_smtp_port"
-                      value={emailConfig.email_smtp_port}
-                      onChange={handleEmailConfigChange}
-                      required
-                      placeholder="587"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="email_smtp_user">SMTP Username (Email) *</label>
-                    <input
-                      type="email"
-                      id="email_smtp_user"
-                      name="email_smtp_user"
-                      value={emailConfig.email_smtp_user}
-                      onChange={handleEmailConfigChange}
-                      required
-                      placeholder="your.email@outlook.com"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="email_smtp_password">SMTP Password *</label>
-                    <input
-                      type="password"
-                      id="email_smtp_password"
-                      name="email_smtp_password"
-                      value={emailConfig.email_smtp_password}
-                      onChange={handleEmailConfigChange}
-                      required={!emailConfig.email_smtp_password}
-                      placeholder={emailConfig.email_smtp_password ? 'Leave blank to keep current' : 'Enter password'}
-                    />
-                    <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
-                      Use an app password if you have 2FA enabled
-                    </small>
-                  </div>
+                    <div className="form-group">
+                      <label htmlFor="email_smtp_host">SMTP Host *</label>
+                      <input
+                        type="text"
+                        id="email_smtp_host"
+                        name="email_smtp_host"
+                        value={emailConfig.email_smtp_host}
+                        onChange={handleEmailConfigChange}
+                        required
+                        placeholder="smtp.office365.com"
+                      />
+                      <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                        For Outlook/Office365: smtp.office365.com
+                      </small>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="email_smtp_port">SMTP Port *</label>
+                      <input
+                        type="number"
+                        id="email_smtp_port"
+                        name="email_smtp_port"
+                        value={emailConfig.email_smtp_port}
+                        onChange={handleEmailConfigChange}
+                        required
+                        placeholder="587"
+                      />
+                      <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                        For Outlook/Office365: 587 (TLS) or 465 (SSL)
+                      </small>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="email_smtp_user">SMTP Username (Your Email Address) *</label>
+                      <input
+                        type="email"
+                        id="email_smtp_user"
+                        name="email_smtp_user"
+                        value={emailConfig.email_smtp_user}
+                        onChange={handleEmailConfigChange}
+                        required
+                        placeholder="your.email@outlook.com"
+                      />
+                      <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                        Your full Outlook/Office365 email address
+                      </small>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="email_smtp_password">SMTP Password *</label>
+                      <input
+                        type="password"
+                        id="email_smtp_password"
+                        name="email_smtp_password"
+                        value={emailConfig.email_smtp_password}
+                        onChange={handleEmailConfigChange}
+                        required={!emailConfig.email_smtp_password}
+                        placeholder={emailConfig.email_smtp_password ? 'Leave blank to keep current' : 'Enter password'}
+                      />
+                      <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
+                        Use your email password, or create an app password if you have 2FA enabled. 
+                        <br />
+                        <a href="https://support.microsoft.com/en-us/account-billing/using-app-passwords-with-apps-that-don-t-support-two-step-verification-5896ed9b-4263-e681-128a-a6f2979a7944" target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc' }}>
+                          Learn how to create an app password
+                        </a>
+                      </small>
+                    </div>
                   <div className="form-group">
                     <label htmlFor="email_from_name">From Name</label>
                     <input
@@ -470,9 +447,67 @@ export default function Profile() {
                   <button type="submit" className="btn btn-primary" disabled={savingEmailConfig}>
                     {savingEmailConfig ? 'Saving...' : 'Save SMTP Configuration'}
                   </button>
-                </form>
-              )}
+                  </form>
+                )}
             </div>
+
+            {/* OAuth Status - Optional/Advanced */}
+            {process.env.NEXT_PUBLIC_ENABLE_OAUTH === 'true' && (
+              <div style={{ marginTop: '32px', marginBottom: '24px', padding: '16px', background: '#f8f9fa', borderRadius: '6px', border: '1px solid #dee2e6' }}>
+                <h4 style={{ marginTop: 0, marginBottom: '8px' }}>Microsoft Account (OAuth) - Advanced</h4>
+                <p style={{ fontSize: '0.85em', color: '#666', marginBottom: '12px' }}>
+                  <strong>Note:</strong> OAuth requires Azure AD setup (paid service). SMTP is free and recommended.
+                </p>
+                {checkingOAuth ? (
+                  <p>Checking connection status...</p>
+                ) : oauthStatus?.connected ? (
+                  <div>
+                    <p style={{ color: '#28a745', marginBottom: '8px' }}>
+                      ✓ Connected to Microsoft Account
+                    </p>
+                    {oauthStatus.email && (
+                      <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '8px' }}>
+                        Email: {oauthStatus.email}
+                      </p>
+                    )}
+                    <button
+                      className="btn btn-danger btn-small"
+                      onClick={async () => {
+                        if (!confirm('Are you sure you want to disconnect your Microsoft account?')) return;
+                        try {
+                          const res = await fetch('/api/auth/microsoft/disconnect', { method: 'POST' });
+                          if (res.ok) {
+                            setMessage({ type: 'success', text: 'Microsoft account disconnected' });
+                            checkOAuthStatus();
+                            window.location.reload();
+                          } else {
+                            setMessage({ type: 'error', text: 'Failed to disconnect' });
+                          }
+                        } catch (error) {
+                          setMessage({ type: 'error', text: 'Failed to disconnect' });
+                        }
+                      }}
+                    >
+                      Disconnect Microsoft Account
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p style={{ color: '#dc3545', marginBottom: '12px' }}>
+                      Not connected to Microsoft Account
+                    </p>
+                    <button
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        window.location.href = '/api/auth/microsoft/authorize';
+                      }}
+                    >
+                      Connect Microsoft Account (Requires Azure AD)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <h3 style={{ marginTop: '40px', marginBottom: '16px' }}>Change Password</h3>
             
