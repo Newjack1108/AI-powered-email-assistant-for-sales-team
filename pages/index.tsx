@@ -497,6 +497,26 @@ export default function Home() {
           </div>
 
           <div className="form-group">
+            <label htmlFor="mood">Email Tone/Mood</label>
+            <select
+              id="mood"
+              name="mood"
+              value={formData.mood}
+              onChange={handleInputChange}
+            >
+              <option value="professional">Professional</option>
+              <option value="friendly">Friendly</option>
+              <option value="casual">Casual</option>
+              <option value="urgent">Urgent</option>
+              <option value="enthusiastic">Enthusiastic</option>
+              <option value="empathetic">Empathetic</option>
+            </select>
+            <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
+              Select the tone you want for this email
+            </small>
+          </div>
+
+          <div className="form-group">
             <label htmlFor="attachment">Attachments</label>
             <input
               type="file"
