@@ -254,25 +254,33 @@ export default function ProductTypes() {
           )}
 
           {!loading && productTypes.length > 0 && (
-            <div className="product-types-list">
-              <table className="data-table">
+            <div className="product-types-list" style={{ overflowX: 'auto' }}>
+              <table className="data-table" style={{ width: '100%', tableLayout: 'fixed' }}>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Trading Name</th>
-                    <th>Description</th>
-                    <th>Last Updated</th>
-                    <th>Actions</th>
+                    <th style={{ width: '20%' }}>Name</th>
+                    <th style={{ width: '20%' }}>Trading Name</th>
+                    <th style={{ width: '30%' }}>Description</th>
+                    <th style={{ width: '15%' }}>Last Updated</th>
+                    <th style={{ width: '15%' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {productTypes.map(pt => (
                     <tr key={pt.id}>
-                      <td><strong>{pt.name}</strong></td>
-                      <td>{pt.trading_name || <em style={{ color: '#999' }}>None</em>}</td>
-                      <td>{pt.description || <em style={{ color: '#999' }}>No description</em>}</td>
-                      <td>{new Date(pt.updated_at).toLocaleString()}</td>
-                      <td>
+                      <td style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                        <strong>{pt.name}</strong>
+                      </td>
+                      <td style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                        {pt.trading_name || <em style={{ color: '#999' }}>None</em>}
+                      </td>
+                      <td style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                        {pt.description || <em style={{ color: '#999' }}>No description</em>}
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap', fontSize: '0.9em' }}>
+                        {new Date(pt.updated_at).toLocaleString()}
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
                         <button
                           className="btn btn-secondary btn-small"
                           onClick={() => handleEdit(pt)}
