@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { initDb, getUserByEmail, getUsers } from '@/lib/db';
+import { initDb, getUserByEmail, getUsers, User } from '@/lib/db';
 import { initAdminFromEnv } from '@/lib/init-admin';
 
 /**
@@ -53,7 +53,7 @@ export default async function handler(
         role: adminUser.role,
         created_at: adminUser.created_at,
       } : null,
-      allUsers: allUsers.map(u => ({
+      allUsers: allUsers.map((u: User) => ({
         id: u.id,
         email: u.email,
         name: u.name,
