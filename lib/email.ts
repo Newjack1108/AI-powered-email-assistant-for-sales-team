@@ -28,18 +28,27 @@ export function createTransporterForUser(smtpConfig: {
   user: string;
   password: string;
 }) {
+  const isSecure = smtpConfig.port === 465;
+  const isOffice365 = smtpConfig.host.includes('office365.com') || smtpConfig.host.includes('outlook.com');
+  
   return nodemailer.createTransport({
     host: smtpConfig.host,
     port: smtpConfig.port,
-    secure: smtpConfig.port === 465,
+    secure: isSecure, // true for 465, false for other ports
+    requireTLS: !isSecure && isOffice365, // Require TLS for Office365 on port 587
     auth: {
       user: smtpConfig.user,
       pass: smtpConfig.password,
     },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000, // 10 seconds
-    socketTimeout: 10000, // 10 seconds
-    // Enable debug for troubleshooting (set to true for verbose logging)
+    tls: {
+      // Do not fail on invalid certificates
+      rejectUnauthorized: false,
+      ciphers: 'SSLv3',
+    },
+    connectionTimeout: 30000, // 30 seconds (increased for slower connections)
+    greetingTimeout: 30000, // 30 seconds
+    socketTimeout: 30000, // 30 seconds
+    // Enable debug for troubleshooting
     debug: process.env.NODE_ENV === 'development',
     logger: process.env.NODE_ENV === 'development',
   });
@@ -172,13 +181,14 @@ async function sendEmailWithSMTP(
     ? options.body 
     : options.body.replace(/\n/g, '<br>');
 
-  try {
-    // Verify connection first
-    await transporter.verify();
-  } catch (error: any) {
-    console.error('SMTP connection verification failed:', error);
-    throw new Error(`Email server connection failed: ${error.message}. Please check your SMTP settings (host, port, username, password).`);
-  }
+  // Skip verification for now - it can be unreliable and Office365 sometimes fails verification but still sends emails
+  // We'll catch errors during actual send instead
+  // try {
+  //   await transporter.verify();
+  // } catch (error: any) {
+  //   console.error('SMTP connection verification failed:', error);
+  //   // Don't throw - verification can fail even when sending works
+  // }
 
   try {
     await transporter.sendMail({
