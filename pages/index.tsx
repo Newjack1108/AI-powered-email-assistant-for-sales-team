@@ -275,6 +275,12 @@ export default function Home() {
       return;
     }
 
+    // Product type is mandatory
+    if (!formData.productType || formData.productType.trim() === '') {
+      setMessage({ type: 'error', text: '⚠️ Product Type is required. Please select a product type before generating the email.' });
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
 
@@ -555,12 +561,16 @@ export default function Home() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="productType">Product Type</label>
+              <label htmlFor="productType">
+                Product Type <span style={{ color: '#dc3545' }}>*</span>
+              </label>
               <select
                 id="productType"
                 name="productType"
                 value={formData.productType}
                 onChange={handleInputChange}
+                required
+                style={!formData.productType ? { borderColor: '#dc3545' } : {}}
               >
                 <option value="">Select product type</option>
                 {productTypes.map(pt => (
@@ -569,6 +579,11 @@ export default function Home() {
                   </option>
                 ))}
               </select>
+              {!formData.productType && (
+                <small style={{ display: 'block', marginTop: '8px', color: '#dc3545' }}>
+                  ⚠️ Product Type is required. Please select a product type before generating the email.
+                </small>
+              )}
               {productTypes.length === 0 && (
                 <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
                   No product types available. <Link href="/admin/product-types">Admin: Manage Product Types</Link>
