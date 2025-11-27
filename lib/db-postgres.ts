@@ -269,11 +269,11 @@ export async function updateEmailStatus(id: string, status: string, sentAt?: str
   );
 }
 
-export async function getEmails(limit: number = 50): Promise<EmailRecord[]> {
+export async function getEmails(limit: number = 50, offset: number = 0): Promise<EmailRecord[]> {
   try {
     const result = await pool.query(
-      `SELECT * FROM emails ORDER BY created_at DESC LIMIT $1`,
-      [limit]
+      `SELECT * FROM emails ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
     return result.rows.map(row => ({
       ...row,

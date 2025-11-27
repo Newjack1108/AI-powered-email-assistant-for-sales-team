@@ -336,11 +336,11 @@ if (process.env.DATABASE_URL) {
     );
   };
 
-  const getEmails = async (limit: number = 50): Promise<EmailRecord[]> => {
+  const getEmails = async (limit: number = 50, offset: number = 0): Promise<EmailRecord[]> => {
     try {
       const result = await dbAll(
-        `SELECT * FROM emails ORDER BY created_at DESC LIMIT ?`,
-        [limit]
+        `SELECT * FROM emails ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        [limit, offset]
       );
       return Array.isArray(result) ? (result as EmailRecord[]) : [];
     } catch (error) {

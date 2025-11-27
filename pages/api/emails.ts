@@ -15,7 +15,7 @@ export default async function handler(
 
   if (req.method === 'GET') {
     try {
-      const { id, limit } = req.query;
+      const { id, page } = req.query;
       
       if (id) {
         const email = await getEmail(id as string);
@@ -25,7 +25,11 @@ export default async function handler(
         return res.status(200).json(email);
       }
 
-      const emails = await getEmails(limit ? parseInt(limit as string) : 50);
+      const pageNumber = page ? parseInt(page as string) : 1;
+      const limit = 15;
+      const offset = (pageNumber - 1) * limit;
+      
+      const emails = await getEmails(limit, offset);
       return res.status(200).json(emails || []);
     } catch (error: any) {
       console.error('Error fetching emails:', error);

@@ -23,20 +23,35 @@ export default function History() {
   const [emails, setEmails] = useState<EmailRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmail, setSelectedEmail] = useState<EmailRecord | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    loadEmails();
-  }, []);
+    loadEmails(currentPage);
+  }, [currentPage]);
 
-  const loadEmails = async () => {
+  const loadEmails = async (page: number) => {
     try {
-      const res = await fetch('/api/emails');
+      setLoading(true);
+      const res = await fetch(`/api/emails?page=${page}`);
       const data = await res.json();
       setEmails(data);
     } catch (error) {
       console.error('Error loading emails:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    // If we got 15 emails, there might be more pages
+    if (emails.length === 15) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -111,6 +126,26 @@ export default function History() {
                   ))}
                 </tbody>
               </table>
+
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button
+                  className="btn btn-outline"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1 || loading}
+                  style={{ fontSize: '14px', padding: '8px 16px' }}
+                >
+                  Previous
+                </button>
+                <span style={{ fontSize: '14px', color: '#666' }}>Page {currentPage}</span>
+                <button
+                  className="btn btn-outline"
+                  onClick={handleNextPage}
+                  disabled={emails.length < 15 || loading}
+                  style={{ fontSize: '14px', padding: '8px 16px' }}
+                >
+                  Next
+                </button>
+              </div>
 
               {selectedEmail && (
                 <div className="email-preview" style={{ marginTop: '24px' }}>
